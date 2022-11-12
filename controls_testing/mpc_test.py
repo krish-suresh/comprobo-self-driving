@@ -12,8 +12,9 @@ import control
 # [X] Linearization function
 # [X] Use LQR to find control mat
 # [X] Draw wheels and wheel base and target poses
-# [ ] Add target pose and test lqr
-# [ ] Implement MPC controls
+# [X] Add target pose and test lqr
+# [X] Implement MPC controls
+# [ ] Tune LQR and add linearization buffer
 # Notes
 # How to set steer angle directly?
 # Is linearizing about non-fixed points ok? or how to linearize x and y based on theta?
@@ -31,8 +32,10 @@ B = np.array([[0, 0],
               [1, 0],  # steering angle
               [0, 1]])  # forward accel
 Q = np.eye(5)
+# Q[0][0] = Q[1][1] = 10
+Q[2][2] = 10
 R = np.eye(2)
-
+# R[1][1] = 10
 # Functions
 
 
@@ -77,9 +80,9 @@ def update_car_drawing(x, wheel_base, back_track_width, front_track_width, wheel
         wheel.set_angle(np.degrees(angle))
 
 # Controls Setup
-r = np.array([1,0,0,0,0])
-A = linearization(x)
-K = control.lqr(A, B, Q, R)[0]
+r = np.array([0.5,1,np.pi/2,0,0])
+# A = linearization(x)
+# K = control.lqr(A, B, Q, R)[0]
 # print(np.linalg.eig(A-np.matmul(B,K))[0])
 # print(K)
 # quit()
@@ -106,6 +109,8 @@ ax.plot(r[0], r[1], marker="o", markersize=2)
 
 # Simulation Loop
 while True:
+    A = linearization(x)
+    K = control.lqr(A, B, Q, R)[0]
     u = K @ (r-x)
     print(u)
     x_dot = non_linear_dynamics(x, u)
