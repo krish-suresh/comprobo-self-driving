@@ -32,10 +32,11 @@ B = np.array([[0, 0],
               [1, 0],  # steering angle
               [0, 1]])  # forward accel
 Q = np.eye(5)
-# Q[0][0] = Q[1][1] = 10
+Q[0][0] = Q[1][1] = 100
 Q[2][2] = 10
 R = np.eye(2)
-# R[1][1] = 10
+R[0][0] = 2
+R[1][1] = 0.1
 # Functions
 
 
@@ -89,9 +90,17 @@ r = np.array([0.5,1,np.pi/2,0,0])
 
 # Plot Setup
 plt.ion()
-plot_w = 2
-fig = plt.figure()
-ax = fig.add_subplot(111)
+plot_w = 1.5
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+fig, axs = plt.subplots(2, 2)
+fig.set_size_inches(18.5, 10.5, forward=True)
+
+gs = axs[0, 0].get_gridspec()
+axs[0,0].remove()
+axs[0,1].remove()
+ax = fig.add_subplot(gs[0, :])
+
 ax.axis("equal")
 ax.set_xlim([-plot_w, plot_w])
 ax.set_ylim([-plot_w, plot_w])
@@ -103,20 +112,41 @@ wheels = [ax.add_patch(copy.copy(wheel_rect)),
 ax.add_patch(copy.copy(wheel_rect)),
 ax.add_patch(copy.copy(wheel_rect)),
 ax.add_patch(copy.copy(wheel_rect)),]
-
 ax.plot(r[0], r[1], marker="o", markersize=2)
 
+padding = 0.25
+ts = [0]
+u_hist = np.array([u])
+steer_plot, = axs[1,0].plot(ts,u_hist[:,0])
+axs[1,0].set_xlim([0, ts[-1]+padding])
+axs[1,0].set_ylim([-5,5])
+axs[1,0].set_xlabel("time (s)")
+axs[1,0].set_ylabel("steering angular speed (rad/s)")
 
+accel_plot, = axs[1,1].plot(ts,u_hist[:,1])
+axs[1,1].set_xlim([0, ts[-1]+padding])
+axs[1,1].set_ylim([-5,5])
+axs[1,0].set_xlabel("time (s)")
+axs[1,1].set_ylabel("forward acceleration (m/s^2)")
 # Simulation Loop
 while True:
     A = linearization(x)
     K = control.lqr(A, B, Q, R)[0]
     u = K @ (r-x)
-    print(u)
     x_dot = non_linear_dynamics(x, u)
     x += x_dot*t_delta
     update_car_drawing(x, wheel_base, back_track_width,
                        front_track_width, wheels)
+    steer_plot.set_xdata(ts)
+    steer_plot.set_ydata(u_hist[:,0])
+    accel_plot.set_xdata(ts)
+    accel_plot.set_ydata(u_hist[:,1])
+    axs[1,0].set_xlim([0, ts[-1]+padding])
+    axs[1,0].set_ylim([min(u_hist[:,0])-padding, max(u_hist[:,0])+padding])
+    axs[1,1].set_xlim([0, ts[-1]+padding])
+    axs[1,1].set_ylim([min(u_hist[:,1])-padding, max(u_hist[:,1])+padding])
     fig.canvas.draw()
     fig.canvas.flush_events()
+    ts.append(ts[-1]+t_delta)
+    u_hist = np.vstack([u_hist, u])
     time.sleep(t_delta)
