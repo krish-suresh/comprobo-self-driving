@@ -1,68 +1,117 @@
-from matplotlib.patches import FancyArrow
+import copy
+from typing import List
+from matplotlib.lines import Line2D
+from matplotlib.patches import FancyArrow, Rectangle
 import numpy as np
 import time
 import matplotlib.pyplot as plt
 import control
-## Tasks
+# Tasks
 # [X] Non linear dynamics
 # [X] Visualize control inputs
 # [X] Linearization function
 # [X] Use LQR to find control mat
-# [ ] Draw wheels and wheel base and target poses
+# [X] Draw wheels and wheel base and target poses
 # [ ] Add target pose and test lqr
-# [ ] Implement MPC controls 
-## Notes
-# motor accel to speed?
+# [ ] Implement MPC controls
+# Notes
+# How to set steer angle directly?
+# Is linearizing about non-fixed points ok? or how to linearize x and y based on theta?
+
+# Constants
 L = 0.2
-t_delta = 0.1 # sec
-x = [0,0,0,0.4,1] # x, y, theta, steer_angle, forward_speed
-u = [0,0] # steer_angle_speed, forward_accel
-B = np.array([[0,0],
-              [0,0],
-              [0,0],
-              [1,0],  # steering angle
-              [0,1]]) # forward accel
+W = 0.15
+wheel_dim = np.array([0.1, 0.05])
+t_delta = 0.01  # sec
+x = np.array([0, 0, 0, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
+u = [0, 0]  # steer_angle_speed, forward_accel
+B = np.array([[0, 0],
+              [0, 0],
+              [0, 0],
+              [1, 0],  # steering angle
+              [0, 1]])  # forward accel
 Q = np.eye(5)
 R = np.eye(2)
+
+# Functions
+
+
 def non_linear_dynamics(x, u):
     x_dot = np.zeros_like(x)
-    x_dot[0] = x[4]*np.cos(x[2]) # x_dot
-    x_dot[1] = x[4]*np.sin(x[2]) # y_dot
-    x_dot[2] = np.tan(x[3])*x[4]/L # theta_dot
-    x_dot[3] = u[0] # steer_angular_speed
-    x_dot[4] = u[1] # forward_accel 
+    x_dot[0] = x[4]*np.cos(x[2])  # x_dot
+    x_dot[1] = x[4]*np.sin(x[2])  # y_dot
+    x_dot[2] = np.tan(x[3])*x[4]/L  # theta_dot
+    x_dot[3] = u[0]  # steer_angular_speed
+    x_dot[4] = u[1]  # forward_accel
     return x_dot
 
-def linearization(x): 
+
+def linearization(x):
     A = np.array([[0, 0, -np.sin(x[2])*x[4], 0, np.cos(x[2])],
                   [0, 0, np.cos(x[2])*x[4], 0, np.sin(x[2])],
-                  [0, 0, 0, (1/(np.cos(x[3])**2))*x[4]/L ,np.tan(x[3])/L],
+                  [0, 0, 0, (1/(np.cos(x[3])**2))*x[4]/L, np.tan(x[3])/L],
                   [0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0]])
     return A
-A = linearization(x)
-K = control.lqr(A,B,Q,R)[0]
-print(np.linalg.eig(A-np.matmul(B,K))[0])
-print(K)
-quit()
 
+
+def update_car_drawing(x, wheel_base, back_track_width, front_track_width, wheels : List[Rectangle]):
+    back_axle_center = x[0:2]
+    front_axle_center = back_axle_center + [np.cos(x[2])*L, np.sin(x[2])*L]
+
+    wheel_centers = [[back_axle_center[0] + np.sin(-x[2])*W/2, back_axle_center[1] + np.cos(-x[2])*W/2],
+    [back_axle_center[0] - np.sin(-x[2])*W/2, back_axle_center[1] - np.cos(-x[2])*W/2],
+    [front_axle_center[0] + np.sin(-x[2])*W/2, front_axle_center[1] + np.cos(-x[2])*W/2],
+    [front_axle_center[0] - np.sin(-x[2])*W/2, front_axle_center[1] - np.cos(-x[2])*W/2]]
+    phi = x[3]
+    phi_l = np.arctan(2*L*np.sin(phi)/(2*L*np.cos(phi) - W*np.sin(phi)))
+    phi_r = np.arctan(2*L*np.sin(phi)/(2*L*np.cos(phi) + W*np.sin(phi)))
+    wheel_angles = [x[2], x[2], x[2]+phi_l, x[2]+phi_r]
+    wheel_base.set_data([[x[0], front_axle_center[0]],
+                        [x[1], front_axle_center[1]]])
+    back_track_width.set_data([[wheel_centers[0][0], wheel_centers[1][0]], [wheel_centers[0][1], wheel_centers[1][1]]])
+    front_track_width.set_data([[wheel_centers[2][0], wheel_centers[3][0]], [wheel_centers[2][1], wheel_centers[3][1]]])
+
+    for wheel, angle, center in zip(wheels, wheel_angles, wheel_centers):
+        wheel.set_xy(center-wheel_dim/2)
+        wheel.set_angle(np.degrees(angle))
+
+# Controls Setup
+r = np.array([1,0,0,0,0])
+A = linearization(x)
+K = control.lqr(A, B, Q, R)[0]
+# print(np.linalg.eig(A-np.matmul(B,K))[0])
+# print(K)
+# quit()
+
+# Plot Setup
 plt.ion()
-W = 2
+plot_w = 2
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.axis("equal")
-ax.set_xlim([-W, W])
-ax.set_ylim([-W, W])
-arrow : FancyArrow = ax.arrow(x[0], x[1], 0.5, 0.5, head_width=0.05, head_length=0.1, fc='k', ec='k')
+ax.set_xlim([-plot_w, plot_w])
+ax.set_ylim([-plot_w, plot_w])
+wheel_base = ax.add_line(Line2D([], []))
+back_track_width = ax.add_line(Line2D([], []))
+front_track_width = ax.add_line(Line2D([], []))
+wheel_rect = Rectangle((0, 0), wheel_dim[0], wheel_dim[1], fc ='none', ec='k', lw = 1, rotation_point="center")
+wheels = [ax.add_patch(copy.copy(wheel_rect)),
+ax.add_patch(copy.copy(wheel_rect)),
+ax.add_patch(copy.copy(wheel_rect)),
+ax.add_patch(copy.copy(wheel_rect)),]
 
+ax.plot(r[0], r[1], marker="o", markersize=2)
+
+
+# Simulation Loop
 while True:
-
+    u = K @ (r-x)
+    print(u)
     x_dot = non_linear_dynamics(x, u)
     x += x_dot*t_delta
-    # print(x)
-    wheel_base_center = x[0:2]
-    front_center = x[0:2] + np.array([np.cos(x[2])*L, np.sin(x[2])*L])
-    arrow.set_xy([wheel_base_center,front_center])
+    update_car_drawing(x, wheel_base, back_track_width,
+                       front_track_width, wheels)
     fig.canvas.draw()
     fig.canvas.flush_events()
     time.sleep(t_delta)
