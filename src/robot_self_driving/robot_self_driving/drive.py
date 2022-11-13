@@ -1,7 +1,7 @@
 import pigpio
 import time
 import numpy as np 
-from geometry import AckermannState
+from .geometry import AckermannState
 
 class AckermannDrive():
     """
@@ -21,12 +21,13 @@ class AckermannDrive():
         self.MAX_RAW_RPM: int = 10400
         self.MAX_SERVO_PWM: int= 2500       # micro sec
         self.MIN_SERVO_PWM: int = 500
-        self.MAX_VEL: int = (self.MAX_RAW_RPM / self.GEAR_RATIO) * ((2 * self.TIRE_DIAMETER * np.pi) / 60)
+        self.MAX_VEL: int = (self.MAX_RAW_RPM / self.GEAR_RATIO) * ((2 * self.TIRE_DIAMETER * np.pi) / 60)  # m/s
 
-    def set_steering_angle(self, theta: int, snooze: int):
+    def set_steering_angle(self, theta: float, snooze: int):
         """
         """
         input_theta = theta/180 * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
+        print(f"Steering Angle: ", input_theta)
         input_radians = np.radians(input_theta)
         self.servo_pwm(width=input_radians, snooze=snooze)
 
@@ -34,6 +35,7 @@ class AckermannDrive():
         """
         """
         input_vel = vel / self.MAX_VEL
+        print(f"Drive Velocity: ", input_vel)
         self.esc_pwm(width=input_vel, snooze=snooze)
 
     def esc_pwm(self, width: int, snooze: int = 0):
@@ -96,4 +98,3 @@ class AckermannDrive():
     def set_control_input(self, u):
         self.set_steering_angle(u[0])
         self.set_drive_velocity(u[1])
-        
