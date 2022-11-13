@@ -25,17 +25,18 @@ class MPCController:
 
     def update(self):
         # TODO add linearization delay
-        A = self.drive.get_linearized_system_matrix()
-        B = self.drive.get_input_matrix()
-        K = control.lqr(A, B, self.Q, self.R)[0]
-        x = self.drive.get_state().to_vector()
-        u = K @ (self.current_goal-x)
-        self.drive.set_control_input(u)
-        if np.linalg.norm(x-self.current_goal) < self.tolerance:
-            if self.waypoints:
-                self.current_goal = self.waypoints.pop(0)
-            else:
-                self.is_following = False
+        if self.is_following:
+            A = self.drive.get_linearized_system_matrix()
+            B = self.drive.get_input_matrix()
+            K = control.lqr(A, B, self.Q, self.R)[0]
+            x = self.drive.get_state().to_vector()
+            u = K @ (self.current_goal-x)
+            self.drive.set_control_input(u)
+            if np.linalg.norm(x-self.current_goal) < self.tolerance:
+                if self.waypoints:
+                    self.current_goal = self.waypoints.pop(0)
+                else:
+                    self.is_following = False
 
     def follow_waypoints(self, waypoints : List[AckermannState]):
         if len(waypoints) > 1:
