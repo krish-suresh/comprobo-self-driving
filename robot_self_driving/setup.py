@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'comprobo_self_driving'
+package_name = 'robot_self_driving'
 
 setup(
     name=package_name,
