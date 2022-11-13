@@ -16,7 +16,7 @@ class Pose2D:
 
 #TODO prob should move somewhere else
 @dataclass
-class AckermanState:
+class AckermannState:
     pose: Pose2D
     steer_angle : float
     drive_velocity : float

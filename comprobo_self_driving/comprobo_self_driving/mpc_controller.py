@@ -1,5 +1,6 @@
 from typing import List
-from geometry import Pose2D, AckermanState
+from geometry import Pose2D, AckermannState
+from drive import AckermannDrive
 import numpy as np
 import control
 
@@ -7,7 +8,7 @@ import control
 
 class MPCController:
     def __init__(self, drive, tolerance):
-        self.drive = drive
+        self.drive : AckermannDrive = drive
         self.tolerance = tolerance
 
         # TODO Should prob live in an LQRController
@@ -18,7 +19,7 @@ class MPCController:
         self.R[0][0] = 2
         self.R[1][1] = 0.1
 
-        self.waypoints : List[AckermanState] = []
+        self.waypoints : List[AckermannState] = []
         self.is_following : bool = False
         self.current_goal = None
 
@@ -27,7 +28,7 @@ class MPCController:
         A = self.drive.get_linearized_system_matrix()
         B = self.drive.get_input_matrix()
         K = control.lqr(A, B, self.Q, self.R)[0]
-        x = self.drive.get_state_vector()
+        x = self.drive.get_state().to_vector()
         u = K @ (self.current_goal-x)
         self.drive.set_control_input(u)
 
