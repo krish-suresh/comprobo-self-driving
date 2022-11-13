@@ -129,13 +129,14 @@ axs[1, 0].set_xlim([0, ts[-1]+padding])
 axs[1, 0].set_ylim([-5, 5])
 axs[1, 0].set_xlabel("time (s)")
 # axs[1,0].set_ylabel("steering angular speed (rad/s)")
-
+axs[1, 0].legend(["steering angular speed (rad/s)", "steering angle (rads)"])
 accel_line, = axs[1, 1].plot(ts, u_hist[:, 1])
 vel_line, = axs[1, 1].plot(ts, u_int_hist[:, 1])
 axs[1, 1].set_xlim([0, ts[-1]+padding])
 axs[1, 1].set_ylim([-5, 5])
 axs[1, 0].set_xlabel("time (s)")
 # axs[1,1].set_ylabel("forward acceleration (m/s^2)")
+axs[1, 1].legend(["forward acceleration (m/s^2)", "forward velocity (m/s)"])
 
 # Simulation Loop
 while True:
