@@ -18,6 +18,8 @@ class AckermannDrive():
         self.connect = pigpio.pi()
         self.pin = pin
         self.wheel_base = 0.2 # m
+        self.MIN_WIDTH_ESC: int = 0
+        self.MAX_WIDTH_ESC: int = 0
         
 
     def set_steering_angle(self, theta):
@@ -44,14 +46,14 @@ class AckermannDrive():
     def arm_esc(self):
         """
         """
-        self.pwm(width=self.MIN_WIDTH, snooze = 4)
+        self.pwm(width=self.MIN_WIDTH_ESC, snooze = 4)
 
     def calibrate_esc(self):
         """
         """
-        self.pwm(width=self.MAX_WIDTH)
-        self.pwm(width=self.MAX_WIDTH, snooze=2)
-        self.pwm(width=self.MIN_WIDTH, snooze=4)
+        self.pwm(width=self.MAX_WIDTH_ESC)
+        self.pwm(width=self.MAX_WIDTH_ESC, snooze=2)
+        self.pwm(width=self.MIN_WIDTH_ESC, snooze=4)
 
     def get_state(self):
         """
