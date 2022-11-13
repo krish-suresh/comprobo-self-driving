@@ -8,26 +8,29 @@ import termios
 
 class SendDriveCommand(Node):
     key_to_vel = {
+        "s": DriveCommand(
+            steering_angle=0.0, speed=0.0
+        ),
         "q": DriveCommand(
-            steering_angle=20.0, speed=.2
+            steering_angle=0.349, speed=.5
         ),
         "w": DriveCommand(
-            steering_angle=0.0, speed=.2
+            steering_angle=0.0, speed=.5
         ),
         "e": DriveCommand(
-            steering_angle=-20.0, speed=.2
+            steering_angle=-0.349, speed=.5
         ),
         "a": DriveCommand(
-            steering_angle=20.0, speed=.2
+            steering_angle=0.349, speed=.5
         ),
         "z": DriveCommand(
-            steering_angle=20.0, speed=-.2
+            steering_angle=0.349, speed=-.5
         ),
         "x": DriveCommand(
-            steering_angle=20.0, speed=-.2
+            steering_angle=0.349, speed=-.5
         ),
         "c": DriveCommand(
-            steering_angle=-20.0, speed=-.2
+            steering_angle=-0.349, speed=-.5
         ),
     }
 

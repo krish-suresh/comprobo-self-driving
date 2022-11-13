@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/ksuresh/ros2_ws/install/simple_filter/include/**",
+        "/home/ksuresh/ros2_ws/install/openni2_camera/include/**",
+        "/home/ksuresh/ros2_ws/install/openni2_camera_msgs/include/**",
+        "/home/ksuresh/ros2_ws/install/neato2_interfaces/include/**",
+        "/home/ksuresh/ros2_ws/install/drive_commands/include/**",
+        "/opt/ros/galactic/include/**",
+        "/opt/ros/foxy/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
