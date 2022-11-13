@@ -7,10 +7,10 @@ class Pose2D:
     y : float
     theta : float
 
-    def __init__(self, state_vector : np.array):
+    def __init__(self, state_vector : np.ndarray):
         self.x, self.y, self.theta = state_vector
 
-    def to_vector(self) -> float:
+    def to_vector(self) -> np.ndarray:
         return np.array([self.x, self.y, self.theta])
 
 
@@ -21,10 +21,9 @@ class AckermannState:
     steer_angle : float
     drive_velocity : float
 
-    def __init__(self, state_vector : np.array):
+    def __init__(self, state_vector : np.ndarray):
         self.pose = Pose2D(state_vector[0:3])
         self.steer_angle = state_vector[3]
         self.drive_velocity = state_vector[4]
-
-    def to_vector(self) -> float:
+    def to_vector(self) -> np.ndarray:
         return np.concatenate(self.pose.to_vector(),np.array([self.steer_angle, self.drive_velocity]))

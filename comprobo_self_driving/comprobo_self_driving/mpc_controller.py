@@ -31,11 +31,15 @@ class MPCController:
         x = self.drive.get_state().to_vector()
         u = K @ (self.current_goal-x)
         self.drive.set_control_input(u)
+        if np.linalg.norm(x-self.current_goal) < self.tolerance:
+            if self.waypoints:
+                self.current_goal = self.waypoints.pop(0)
+            else:
+                self.is_following = False
 
-        # if x
-        
-
-
-    def follow_waypoints(self, waypoints : List[AckermanState]):
+    def follow_waypoints(self, waypoints : List[AckermannState]):
+        if len(waypoints) > 1:
+            raise ValueError("Must follow atleast 1 waypoint")
         self.is_following = True
         self.waypoints = waypoints
+        self.current_goal = self.waypoints.pop(0)

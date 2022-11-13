@@ -3,6 +3,7 @@ from gpiozero import Servo
 import pigpio
 import time
 import numpy as np 
+from geometry import AckermannState
 
 SERVO_PIN: int = 0
 ENCODER_PIN: int
@@ -45,7 +46,7 @@ class AckermannDrive():
         """
         self.pwm(width=self.MIN_WIDTH, snooze = 4)
 
-    def get_state(self):
+    def get_state(self) -> AckermannState:
         """
         """
         pass
@@ -56,7 +57,7 @@ class AckermannDrive():
         pass
 
 
-    def get_linearized_system_matrix(self) -> np.array():
+    def get_linearized_system_matrix(self) -> np.ndarray:
         x = self.get_state().to_vector()
         L = self.wheel_base
         return np.array([[0, 0, -np.sin(x[2])*x[4], 0, np.cos(x[2])],
@@ -65,7 +66,7 @@ class AckermannDrive():
                   [0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0]])
 
-    def get_input_matrix(self) -> np.array():
+    def get_input_matrix(self) -> np.ndarray:
         return np.array([[0, 0],
                          [0, 0],
                          [0, 0],
