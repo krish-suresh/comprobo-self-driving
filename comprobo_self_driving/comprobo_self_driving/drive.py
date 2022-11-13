@@ -5,7 +5,7 @@ import time
 import numpy as np 
 
 SERVO_PIN: int = 0
-ENCODER_PIN: int
+ENCODER_PIN: int = 0
 
 class AckermannDrive():
     """
@@ -28,14 +28,15 @@ class AckermannDrive():
         print(val)
 
 
-    def set_drive_velocity(self, p):
+    def set_drive_velocity(self, width, snooze):
         """
         """
+        self.pwm(width=width, snooze=snooze)
 
     def pwm(self, width: int, snooze: int = 0):
         """
         """
-        self.conn.set_servo_pulsewidth(self.pin, width)
+        self.connect.set_servo_pulsewidth(self.pin, width)
         if snooze:
             time.sleep(snooze)
         return
@@ -45,8 +46,16 @@ class AckermannDrive():
         """
         self.pwm(width=self.MIN_WIDTH, snooze = 4)
 
+    def calibrate_esc(self):
+        """
+        """
+        self.pwm(width=self.MAX_WIDTH)
+        self.pwm(width=self.MAX_WIDTH, snooze=2)
+        self.pwm(width=self.MIN_WIDTH, snooze=4)
+
     def get_state(self):
         """
+        Return Ackermann state
         """
         pass
 
