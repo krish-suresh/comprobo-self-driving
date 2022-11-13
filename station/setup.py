@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'robot_self_driving'
+package_name = 'station'
 
 setup(
     name=package_name,
@@ -13,14 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='elockwood',
-    maintainer_email='elockwood@olin.edu',
+    maintainer='achakraborty',
+    maintainer_email='achakraborty@olin.edu',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'receive_telop = robot_self_driving.teleop_node:main'
+            'send_teleop = station.teleop:main'
         ],
     },
 )
