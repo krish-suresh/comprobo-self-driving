@@ -11,33 +11,35 @@ class AckermannDrive():
         """
         """
         self.connect = pigpio.pi()
-        self.ESC_PIN: int = 0
-        self.SERVO_PIN: int = 0
+        self.ESC_PIN: int = 15
+        self.SERVO_PIN: int = 14
         self.WHEEL_BASE: float = 0.2 # m
         self.MIN_WIDTH_ESC: int = 1000
         self.MAX_WIDTH_ESC: int = 2000
-        self.TIRE_DIAMETER: int = 119.4      # mm
+        self.TIRE_DIAMETER: int = 0.1194      # mm
         self.GEAR_RATIO: int = 42
         self.MAX_RAW_RPM: int = 10400
         self.MAX_SERVO_PWM: int= 2500       # micro sec
         self.MIN_SERVO_PWM: int = 500
-        self.MAX_VEL: int = (self.MAX_RAW_RPM / self.GEAR_RATIO) * ((2 * self.TIRE_DIAMETER * np.pi) / 60)  # m/s
+        self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
 
     def set_steering_angle(self, theta: float, snooze: int):
         """
         """
-        input_theta = theta/180 * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
-        print(f"Steering Angle: ", input_theta)
-        input_radians = np.radians(input_theta)
-        self.servo_pwm(width=input_radians, snooze=snooze)
+        print(f"Steering Angle: ", theta)
+        steering_pwm_signal = (1.8 - theta)/np.pi * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
+        print(f"steering {steering_pwm_signal}")
+        self.servo_pwm(width=steering_pwm_signal)
 
     def set_drive_velocity(self, vel: float, snooze: int):
         """
         """
         input_vel = vel / self.MAX_VEL
         print(f"Drive Velocity: ", input_vel)
-        esc_pwm_signal = input_vel*(self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC) + self.MIN_WIDTH_ESC
-        self.esc_pwm(width=esc_pwm_signal, snooze=snooze)
+        print(self.MAX_VEL)
+        esc_pwm_signal = -input_vel*(self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2 + self.MIN_WIDTH_ESC + (self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2
+        print(f"esc {esc_pwm_signal}")
+        self.esc_pwm(width=esc_pwm_signal)
 
     def esc_pwm(self, width: int, snooze: int = 0):
         """
@@ -58,12 +60,15 @@ class AckermannDrive():
     def arm_esc(self):
         """
         """
+        self.esc_pwm(width=self.MIN_WIDTH_ESC)
+        input("Connect power and press Enter to continue...")
         self.esc_pwm(width=self.MIN_WIDTH_ESC, snooze = 4)
 
     def calibrate_esc(self):
         """
         """
         self.esc_pwm(width=self.MAX_WIDTH_ESC)
+        input("Connect power and press Enter to continue...")
         self.esc_pwm(width=self.MAX_WIDTH_ESC, snooze=2)
         self.esc_pwm(width=self.MIN_WIDTH_ESC, snooze=4)
 

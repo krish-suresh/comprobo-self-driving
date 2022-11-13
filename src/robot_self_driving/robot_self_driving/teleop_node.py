@@ -9,6 +9,7 @@ class ReceiveTeleopNode(Node):
         super().__init__('teleop_node')
         self.mvt_sub = self.create_subscription(DriveCommand, "mvt_command", self.process_mvt_command, 10)
         self.robot = Robot()
+        # self.robot.drive.arm_esc()
         #self.drive = AckermannDrive()
 
     def process_mvt_command(self, msg: DriveCommand):
