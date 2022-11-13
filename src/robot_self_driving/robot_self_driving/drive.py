@@ -36,7 +36,8 @@ class AckermannDrive():
         """
         input_vel = vel / self.MAX_VEL
         print(f"Drive Velocity: ", input_vel)
-        self.esc_pwm(width=input_vel, snooze=snooze)
+        esc_pwm_signal = input_vel*(self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC) + self.MIN_WIDTH_ESC
+        self.esc_pwm(width=esc_pwm_signal, snooze=snooze)
 
     def esc_pwm(self, width: int, snooze: int = 0):
         """
