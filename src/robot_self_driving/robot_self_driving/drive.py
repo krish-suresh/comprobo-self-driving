@@ -96,5 +96,6 @@ class AckermannDrive():
                          [0, 1]])  # forward accel
 
     def set_control_input(self, u):
+        # TODO integrate u
         self.set_steering_angle(u[0])
         self.set_drive_velocity(u[1])

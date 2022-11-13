@@ -1,10 +1,10 @@
 from .drive import AckermannDrive
 from .mpc_controller import MPCController
-
+from .simulated_ackermann_drive import SimulatedAckermannDrive
 class Robot():
 
-    def __init__(self):
-        self.drive = AckermannDrive()
+    def __init__(self, use_sim = False):
+        self.drive = AckermannDrive() if not use_sim else SimulatedAckermannDrive()
         self.controller = MPCController(self.drive, 0.1) # TODO move tol somewhere else
 
 
