@@ -22,7 +22,7 @@ import control
 L = 0.2
 W = 0.15
 wheel_dim = np.array([0.1, 0.05])
-t_delta = 0.01  # sec
+t_delta = 0.005  # sec
 x = np.array([0, 0, 0, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
 u = [0, 0]  # steer_angle_speed, forward_accel
 B = np.array([[0, 0],
@@ -85,7 +85,10 @@ def update_car_drawing(x, wheel_base, back_track_width, front_track_width, wheel
 
 
 # Controls Setup
-r = np.array([0.5, 0, 0, 0, 0])
+through_speed = 1.2
+waypoints = [np.array([1, -0.4, -np.pi/4, 0, through_speed]), np.array([1.5, -0.7, 0, 0, through_speed]),
+             np.array([2, 0, np.pi/2, 0, through_speed]), np.array([0.5, 0.4, np.pi, 0, 0])]
+r = waypoints.pop(0)
 # A = linearization(x)
 # K = control.lqr(A, B, Q, R)[0]
 # print(np.linalg.eig(A-np.matmul(B,K))[0])
@@ -94,11 +97,11 @@ r = np.array([0.5, 0, 0, 0, 0])
 
 # Plot Setup
 plt.ion()
-plot_w = 1.5
+plot_w = 4
 # fig = plt.figure()
 # ax = fig.add_subplot(111)
 fig, axs = plt.subplots(2, 2)
-fig.set_size_inches(18.5, 10.5, forward=True)
+fig.set_size_inches(10, 8, forward=True)
 
 gs = axs[0, 0].get_gridspec()
 axs[0, 0].remove()
@@ -117,12 +120,12 @@ wheels = [ax.add_patch(copy.copy(wheel_rect)),
           ax.add_patch(copy.copy(wheel_rect)),
           ax.add_patch(copy.copy(wheel_rect)),
           ax.add_patch(copy.copy(wheel_rect)), ]
-ax.plot(r[0], r[1], marker="o", markersize=2)
+goal_point, = ax.plot(r[0], r[1], marker="o", markersize=2)
 
 padding = 0.25
 ts = [0]
 u_hist = np.array([u])
-u_int_hist = np.array([[0,0]])
+u_int_hist = np.array([[0, 0]])
 steer_speed_line, = axs[1, 0].plot(ts, u_hist[:, 0])
 steer_angle_line, = axs[1, 0].plot(ts, u_int_hist[:, 0])
 axs[1, 0].set_xlim([0, ts[-1]+padding])
@@ -137,15 +140,21 @@ axs[1, 1].set_ylim([-5, 5])
 axs[1, 0].set_xlabel("time (s)")
 # axs[1,1].set_ylabel("forward acceleration (m/s^2)")
 axs[1, 1].legend(["forward acceleration (m/s^2)", "forward velocity (m/s)"])
-
+input()
 # Simulation Loop
 while True:
     A = linearization(x)
     K = control.lqr(A, B, Q, R)[0]
+    print((r-x))
     u = K @ (r-x)
     x_dot = non_linear_dynamics(x, u)
     x += x_dot*t_delta
 
+    if np.linalg.norm(x[0:2]-r[0:2]) < 0.1:
+        if waypoints:
+            r = waypoints.pop(0)
+        else:
+            break
     update_car_drawing(x, wheel_base, back_track_width,
                        front_track_width, wheels)
     steer_speed_line.set_xdata(ts)
@@ -160,6 +169,8 @@ while True:
     axs[1, 0].set_ylim([min(u_hist[:, 0])-padding, max(u_hist[:, 0])+padding])
     axs[1, 1].set_xlim([0, ts[-1]+padding])
     axs[1, 1].set_ylim([min(u_hist[:, 1])-padding, max(u_hist[:, 1])+padding])
+    goal_point.set_xdata(r[0])
+    goal_point.set_ydata(r[1])
     fig.canvas.draw()
     fig.canvas.flush_events()
     ts.append(ts[-1]+t_delta)
