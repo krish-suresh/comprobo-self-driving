@@ -14,7 +14,7 @@ class MPCController:
         # TODO Should prob live in an LQRController
         self.Q = np.eye(5)
         self.Q[0][0] = self.Q[1][1] = 100
-        self.Q[2][2] = 10
+        self.Q[2][2] = 100
         self.R = np.eye(2)
         self.R[0][0] = 2
         self.R[1][1] = 0.1

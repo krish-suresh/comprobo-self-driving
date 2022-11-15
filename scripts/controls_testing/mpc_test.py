@@ -16,6 +16,7 @@ import control
 # [X] Implement MPC controls
 # [ ] Tune LQR and add linearization buffer
 # [ ] Attempt discrete model
+# [ ] Add visualization of finite LQR horizon 
 # Notes
 
 # Constants
@@ -32,7 +33,7 @@ B = np.array([[0, 0],
               [0, 1]])  # forward accel
 Q = np.eye(5)
 Q[0][0] = Q[1][1] = 100
-Q[2][2] = 10
+Q[2][2] = 100
 R = np.eye(2)
 R[0][0] = 2
 R[1][1] = 0.1
@@ -140,7 +141,6 @@ axs[1, 1].set_ylim([-5, 5])
 axs[1, 0].set_xlabel("time (s)")
 # axs[1,1].set_ylabel("forward acceleration (m/s^2)")
 axs[1, 1].legend(["forward acceleration (m/s^2)", "forward velocity (m/s)"])
-input()
 # Simulation Loop
 while True:
     A = linearization(x)

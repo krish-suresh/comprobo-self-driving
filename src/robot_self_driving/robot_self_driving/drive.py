@@ -22,6 +22,7 @@ class AckermannDrive():
         self.MAX_SERVO_PWM: int= 2500       # micro sec
         self.MIN_SERVO_PWM: int = 500
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
+        self.u_integrated = np.zeros((2,1))
 
     def set_steering_angle(self, theta: float, snooze: int):
         """
@@ -102,6 +103,9 @@ class AckermannDrive():
                          [0, 1]])  # forward accel
 
     def set_control_input(self, u):
-        # TODO integrate u
-        self.set_steering_angle(u[0])
-        self.set_drive_velocity(u[1])
+        current_time = time.time_ns()
+        t_delta = (current_time - self.previous_set_input_time)/ (10 ** 9)
+        self.u_integrated += u*t_delta
+        self.set_steering_angle(self.u_integrated[0])
+        self.set_drive_velocity(self.u_integrated[1])
+        self.previous_set_input_time = current_time

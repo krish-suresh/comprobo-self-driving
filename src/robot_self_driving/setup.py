@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'receive_telop = robot_self_driving.teleop_node:main'
+            'receive_teleop = robot_self_driving.teleop_node:main',
+            'waypoint_test = robot_self_driving.waypoint_test_node:main'
         ],
     },
 )
