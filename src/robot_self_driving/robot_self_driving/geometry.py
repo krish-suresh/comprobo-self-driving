@@ -27,4 +27,4 @@ class AckermannState:
         self.steer_angle = state_vector[3]
         self.drive_velocity = state_vector[4]
     def to_vector(self) -> np.ndarray:
-        return np.concatenate(self.pose.to_vector(),np.array([self.steer_angle, self.drive_velocity]))
+        return np.concatenate((self.pose.to_vector(),np.array([self.steer_angle, self.drive_velocity])))
