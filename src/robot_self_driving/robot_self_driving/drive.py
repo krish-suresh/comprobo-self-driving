@@ -23,6 +23,8 @@ class AckermannDrive():
         self.MIN_SERVO_PWM: int = 500
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
         self.u_integrated = np.zeros((2,1))
+        self.state = np.array([0,0,0,0,0])
+        self.u = np.zeros((2,1))
 
     def set_steering_angle(self, theta: float, snooze: int):
         """
@@ -77,14 +79,29 @@ class AckermannDrive():
         """
         Return Ackermann state
         """
-        pass 
+        return AckermannState(self.state)
 
     def update(self):
         """
         update odom
         """
-        pass
+        # TODO replace with encoder odom
+        cur_time = time.time_ns()
+        t_delta = (cur_time - self.previous_odom_time) / (10 ** 9)
+        x_dot = self.non_linear_dynamics()
+        self.state += x_dot*t_delta
+        self.previous_odom_time = cur_time
 
+    def non_linear_dynamics(self):
+        x = self.get_state().to_vector()
+        L = self.WHEEL_BASE
+        x_dot = np.zeros_like(x)
+        x_dot[0] = x[4]*np.cos(x[2])  # x_dot
+        x_dot[1] = x[4]*np.sin(x[2])  # y_dot
+        x_dot[2] = np.tan(x[3])*x[4]/L  # theta_dot
+        x_dot[3] = self.u[0]  # steer_angular_speed
+        x_dot[4] = self.u[1]  # forward_accel
+        return x_dot
 
     def get_linearized_system_matrix(self) -> np.ndarray:
         x = self.get_state().to_vector()
@@ -103,6 +120,7 @@ class AckermannDrive():
                          [0, 1]])  # forward accel
 
     def set_control_input(self, u):
+        self.u = u
         current_time = time.time_ns()
         t_delta = (current_time - self.previous_set_input_time)/ (10 ** 9)
         self.u_integrated += u*t_delta

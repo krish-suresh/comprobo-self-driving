@@ -21,7 +21,8 @@ class AckermannState:
     steer_angle : float
     drive_velocity : float
 
-    def __init__(self, state_vector : np.ndarray):
+    def __init__(self, state):
+        state_vector = np.array(state)
         self.pose = Pose2D(state_vector[0:3])
         self.steer_angle = state_vector[3]
         self.drive_velocity = state_vector[4]

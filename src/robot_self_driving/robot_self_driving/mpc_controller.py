@@ -37,6 +37,8 @@ class MPCController:
                     self.current_goal = self.waypoints.pop(0)
                 else:
                     self.is_following = False
+        else:
+            self.drive.set_control_input(np.zeros((2,1)))
 
     def follow_waypoints(self, waypoints : List[AckermannState]):
         if len(waypoints) > 1:
