@@ -19,21 +19,23 @@ class AckermannDrive():
         self.TIRE_DIAMETER: int = 0.1194      # mm
         self.GEAR_RATIO: int = 42
         self.MAX_RAW_RPM: int = 10400
-        self.MAX_SERVO_PWM: int= 2500       # micro sec
-        self.MIN_SERVO_PWM: int = 500
+        self.RAD_TO_PWM = -1000/(np.pi/2)
+        self.CENTER_PWM = 1250
+        self.TURN_PHI_MAX = np.radians(32)
+        self.TURN_PHI_MIN = np.radians(-47)
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
         self.state = np.array([0, 0, 0, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
         self.previous_set_input_time = None
 
-    def set_steering_angle(self, theta: float):
+    def set_steering_angle(self, phi: float):
         """
         """
-        print(f"Steering Angle: ", theta)
-        steering_pwm_signal: float = (1.8 - theta)/np.pi * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
+        steering_pwm_signal = phi*self.RAD_TO_PWM + self.CENTER_SERVO_PWM
+        print(f"Steering Angle: ", phi)
         print(f"steering {steering_pwm_signal}")
-        # self.servo_pwm(width=steering_pwm_signal)
+        self.servo_pwm(width=steering_pwm_signal)
 
     def set_drive_velocity(self, vel: float):
         """
