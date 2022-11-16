@@ -31,14 +31,14 @@ class AckermannDrive():
         """
         """
         print(f"Steering Angle: ", theta)
-        steering_pwm_signal = (1.8 - theta)/np.pi * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
+        steering_pwm_signal: float = (1.8 - theta)/np.pi * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
         print(f"steering {steering_pwm_signal}")
         # self.servo_pwm(width=steering_pwm_signal)
 
     def set_drive_velocity(self, vel: float):
         """
         """
-        input_vel = vel / self.MAX_VEL
+        input_vel: float = vel / self.MAX_VEL
         print(f"Drive Velocity: ", input_vel)
         print(self.MAX_VEL)
         esc_pwm_signal = -input_vel*(self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2 + self.MIN_WIDTH_ESC + (self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2
@@ -91,14 +91,14 @@ class AckermannDrive():
             self.previous_odom_time = time.time_ns()
             return
         cur_time = time.time_ns()
-        t_delta = (cur_time - self.previous_odom_time) / (10 ** 9)
+        t_delta: float = (cur_time - self.previous_odom_time) / (10 ** 9)
         x_dot = self.non_linear_dynamics()
         self.state += x_dot*t_delta
         self.previous_odom_time = cur_time
 
     def non_linear_dynamics(self):
         x = self.get_state().to_vector()
-        L = self.WHEEL_BASE
+        L: float= self.WHEEL_BASE
         x_dot = np.zeros_like(x)
         x_dot[0] = x[4]*np.cos(x[2])  # x_dot
         x_dot[1] = x[4]*np.sin(x[2])  # y_dot
@@ -109,7 +109,7 @@ class AckermannDrive():
 
     def get_linearized_system_matrix(self) -> np.ndarray:
         x = self.get_state().to_vector()
-        L = self.WHEEL_BASE
+        L: float = self.WHEEL_BASE
         return np.array([[0, 0, -np.sin(x[2])*x[4], 0, np.cos(x[2])],
                   [0, 0, np.cos(x[2])*x[4], 0, np.sin(x[2])],
                   [0, 0, 0, (1/(np.cos(x[3])**2))*x[4]/L, np.tan(x[3])/L],
@@ -129,7 +129,7 @@ class AckermannDrive():
             return
         self.u = u
         current_time = time.time_ns()
-        t_delta = (current_time - self.previous_set_input_time)/ (10 ** 9)
+        t_delta: float = (current_time - self.previous_set_input_time)/ (10 ** 9)
         self.state[3:] += u*t_delta
         self.set_steering_angle(self.state[3])
         self.set_drive_velocity(self.state[4])
