@@ -20,7 +20,7 @@ class WaypointTestNode(Node):
             ]
 
         self.timer = self.create_timer(timer_period, self.run_loop)
-        self.robot = Robot(use_sim=True)
+        self.robot = Robot(use_sim=False)
         # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
         self.robot.controller.follow_waypoints(waypoints)
 

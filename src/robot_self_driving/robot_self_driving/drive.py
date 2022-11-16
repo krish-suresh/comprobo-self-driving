@@ -10,7 +10,7 @@ class AckermannDrive():
     def __init__(self):
         """
         """
-        self.connect = pigpio.pi()
+        # self.connect = pigpio.pi()
         self.ESC_PIN: int = 15
         self.SERVO_PIN: int = 14
         self.WHEEL_BASE: float = 0.2 # m
@@ -22,19 +22,20 @@ class AckermannDrive():
         self.MAX_SERVO_PWM: int= 2500       # micro sec
         self.MIN_SERVO_PWM: int = 500
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
-        self.u_integrated = np.zeros((2,1))
-        self.state = np.array([0,0,0,0,0])
+        self.state = np.array([0, 0, 0, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
         self.u = np.zeros((2,1))
+        self.previous_odom_time = None
+        self.previous_set_input_time = None
 
-    def set_steering_angle(self, theta: float, snooze: int):
+    def set_steering_angle(self, theta: float):
         """
         """
         print(f"Steering Angle: ", theta)
         steering_pwm_signal = (1.8 - theta)/np.pi * (self.MAX_SERVO_PWM - self.MIN_SERVO_PWM) + (self.MIN_SERVO_PWM)
         print(f"steering {steering_pwm_signal}")
-        self.servo_pwm(width=steering_pwm_signal)
+        # self.servo_pwm(width=steering_pwm_signal)
 
-    def set_drive_velocity(self, vel: float, snooze: int):
+    def set_drive_velocity(self, vel: float):
         """
         """
         input_vel = vel / self.MAX_VEL
@@ -42,7 +43,7 @@ class AckermannDrive():
         print(self.MAX_VEL)
         esc_pwm_signal = -input_vel*(self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2 + self.MIN_WIDTH_ESC + (self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2
         print(f"esc {esc_pwm_signal}")
-        self.esc_pwm(width=esc_pwm_signal)
+        # self.esc_pwm(width=esc_pwm_signal)
 
     def esc_pwm(self, width: int, snooze: int = 0):
         """
@@ -86,6 +87,9 @@ class AckermannDrive():
         update odom
         """
         # TODO replace with encoder odom
+        if not self.previous_odom_time:
+            self.previous_odom_time = time.time_ns()
+            return
         cur_time = time.time_ns()
         t_delta = (cur_time - self.previous_odom_time) / (10 ** 9)
         x_dot = self.non_linear_dynamics()
@@ -120,10 +124,13 @@ class AckermannDrive():
                          [0, 1]])  # forward accel
 
     def set_control_input(self, u):
+        if not self.previous_set_input_time:
+            self.previous_set_input_time = time.time_ns()
+            return
         self.u = u
         current_time = time.time_ns()
         t_delta = (current_time - self.previous_set_input_time)/ (10 ** 9)
-        self.u_integrated += u*t_delta
-        self.set_steering_angle(self.u_integrated[0])
-        self.set_drive_velocity(self.u_integrated[1])
+        self.state[3:] += u*t_delta
+        self.set_steering_angle(self.state[3])
+        self.set_drive_velocity(self.state[4])
         self.previous_set_input_time = current_time
