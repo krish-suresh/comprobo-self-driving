@@ -1,6 +1,3 @@
 [submodule "src/imu/navXTimeSync"]
 	path = src/imu/navXTimeSync
 	url = git@github.com:FRC900/navXTimeSync.git
-[submodule "src/robot_self_driving/robot_self_driving/rpi-rotary-encoder-python"]
-	path = src/robot_self_driving/robot_self_driving/rpi-rotary-encoder-python
-	url = git@github.com:nstansby/rpi-rotary-encoder-python.git
