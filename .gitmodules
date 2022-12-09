@@ -1,3 +1,6 @@
 [submodule "src/imu/navXTimeSync"]
 	path = src/imu/navXTimeSync
 	url = git@github.com:FRC900/navXTimeSync.git
+[submodule "src/robot_self_driving/robot_self_driving/python-gamepad"]
+	path = src/robot_self_driving/robot_self_driving/python-gamepad
+	url = git@github.com:rickwierenga/python-gamepad.git

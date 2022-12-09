@@ -5,6 +5,10 @@ import tty
 import select
 import sys
 import termios
+from .controller import LogitechController
+import numpy as np
+
+CONTROLLER_MODE = "JOYSTICK"    # JOYSTICK or KEYBOARD
 
 class SendDriveCommand(Node):
     key_to_vel = {
@@ -36,7 +40,10 @@ class SendDriveCommand(Node):
 
     def __init__(self):
         super().__init__('send_drive_command')
-        self.settings = termios.tcgetattr(sys.stdin)
+        if CONTROLLER_MODE == "KEYBOARD":
+            self.settings = termios.tcgetattr(sys.stdin)
+        else:
+            self.controller = LogitechController()
         self.drive_command_pub = self.create_publisher(DriveCommand, "mvt_command", 10)
         self.timer = self.create_timer(.1, self.run_loop)
 
@@ -48,12 +55,20 @@ class SendDriveCommand(Node):
         return key
     
     def run_loop(self):
-        self.key = self.get_key()
-        if self.key == "\x03":
-            self.publisher.publish(self.key_to_vel["s"])
-            raise KeyboardInterrupt
-        if self.key in self.key_to_vel.keys():
-            self.drive_command_pub.publish(self.key_to_vel[self.key])
+        if CONTROLLER_MODE == "KEYBOARD":
+            self.key = self.get_key()
+            if self.key == "\x03":
+                self.publisher.publish(self.key_to_vel["s"])
+                raise KeyboardInterrupt
+            if self.key in self.key_to_vel.keys():
+                self.drive_command_pub.publish(self.key_to_vel[self.key])
+        else:
+            self.controller.listen()
+            controller_x = self.controller.axis_data[0]
+            controller_y = self.controller.axis_data[1]
+            drive_speed = (controller_x**2 + controller_y**2)**.5/np.sqrt(2)
+            drive_angle = np.deg2rad(controller_x*35)
+            self.drive_command_pub.publish(DriveCommand(steering_angle=drive_angle, speed=drive_speed))
 
 def main(args=None):
     rclpy.init()
