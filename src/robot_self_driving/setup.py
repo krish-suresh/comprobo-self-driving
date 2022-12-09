@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'receive_teleop = robot_self_driving.teleop_node:main',
-            'waypoint_test = robot_self_driving.waypoint_test_node:main'
+            'waypoint_test = robot_self_driving.waypoint_test_node:main',
+            'odometry = robot_self_driving.encoder:main',
         ],
     },
 )
