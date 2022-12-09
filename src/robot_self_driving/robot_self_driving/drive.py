@@ -37,6 +37,7 @@ class AckermannDrive():
         self.TURN_PHI_MIN = np.radians(-47)
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
         self.state = np.array([0, 0, 0, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
+        self.steering_angle = 0
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
         self.previous_set_input_time = None
@@ -47,6 +48,7 @@ class AckermannDrive():
     def set_steering_angle(self, phi: float):
         """
         """
+        self.steering_angle = phi
         steering_pwm_signal = phi*self.RAD_TO_PWM + self.CENTER_SERVO_PWM
         print(f"Steering Angle: ", phi)
         print(f"steering {steering_pwm_signal}")
@@ -114,8 +116,8 @@ class AckermannDrive():
         dist_travelled = delta_ticks/self.TOTAL_ENCODER_TICKS*(2*np.pi*self.WHEEL_ENCODER_RADIUS)
         self.state[0] += dist_travelled * np.cos(self.curr_heading)
         self.state[1] += dist_travelled * np.sin(self.curr_heading)
-        self.state[2] += np.tan(self.state[3])*self.state[4]/self.WHEEL_BASE
-        self.state[3] = self.curr_heading
+        self.state[2] = self.curr_heading
+        self.state[3] = self.steering_angle
         self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)
         self.previous_odom_time = cur_time
 
