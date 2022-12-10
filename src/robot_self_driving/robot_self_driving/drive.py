@@ -1,7 +1,7 @@
 import pigpio
 import time
 import numpy as np 
-from .geometry import AckermannState
+from self_driving_utils.self_driving_utils.geometry import AckermannState
 from rclpy.node import Node
 from std_msgs.msg import Float64
 import Encoder

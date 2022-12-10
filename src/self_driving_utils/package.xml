@@ -1,16 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>robot_self_driving</name>
+  <name>self_driving_utils</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="elockwood@olin.edu">elockwood</maintainer>
+  <maintainer email="krishna4132@gmail.com">ksuresh</maintainer>
   <license>TODO: License declaration</license>
-
-  <build_depend>rosidl_default_generators</build_depend>
-  <build_depend>rosidl_default_generators</build_depend>
-  <exec_depend>rosidl_default_runtime</exec_depend>
-  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

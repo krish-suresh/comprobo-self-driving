@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'robot_self_driving'
+package_name = 'self_driving_utils'
 
 setup(
     name=package_name,
@@ -13,16 +13,13 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='elockwood',
-    maintainer_email='elockwood@olin.edu',
+    maintainer='ksuresh',
+    maintainer_email='krishna4132@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'receive_teleop = robot_self_driving.teleop_node:main',
-            'spline_test = robot_self_driving.spline_follow_test_node:main',
-            'odometry = robot_self_driving.encoder:main',
         ],
     },
 )
