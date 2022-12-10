@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from curves import CubicSpline2D
+from .curves import CubicSpline2D
 
 class TrapezoidalMotionProfile:
     #      1          2

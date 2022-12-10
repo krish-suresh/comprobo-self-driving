@@ -1,7 +1,7 @@
-from .drive import AckermannDrive
 from .mpc_controller import MPCController
 from .lqr_trajectory_follower import AckermanLQRTrajectoryFollower
 from .simulated_ackermann_drive import SimulatedAckermannDrive
+from .drive import AckermannDrive
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 
@@ -15,7 +15,7 @@ class Robot():
         """
         """
         self.ros_node = ros_node
-        self.camera_sub = self.ros_node.create_subscription(Image, ROS_CAMERA_TOPIC, self.process_image)
+        # self.camera_sub = self.ros_node.create_subscription(Image, ROS_CAMERA_TOPIC, self.process_image)
         self.current_image = None
         self.drive = AckermannDrive(self.ros_node) if not use_sim else SimulatedAckermannDrive()
         self.controller = AckermanLQRTrajectoryFollower(self.drive)

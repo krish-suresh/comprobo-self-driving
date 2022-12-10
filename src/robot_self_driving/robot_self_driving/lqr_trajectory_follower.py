@@ -2,7 +2,7 @@ import math
 import control
 import numpy as np
 import time
-from self_driving_utils.self_driving_utils.trajectory import CubicSplineTrajectory
+from .trajectory import CubicSplineTrajectory
 from .drive import AckermannDrive
 
 class AckermanLQRTrajectoryFollower:
