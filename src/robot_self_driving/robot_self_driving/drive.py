@@ -124,7 +124,7 @@ class AckermannDrive():
         self.state[1] += dist_travelled * np.sin(self.curr_heading)
         self.state[2] = self.curr_heading
         self.state[3] = self.steering_angle
-        self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)
+        self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9
         print(self.state[0:3])
         self.previous_odom_time = cur_time
 
