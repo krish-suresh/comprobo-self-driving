@@ -59,7 +59,7 @@ class RotationLimitedMotionProfile(MotionProfile):
             k = path.calc_curvature(s)
             limited_v = max_velocity
             if k != 0:
-                limited_v = min(max_velocity, max_angular_velocity/k)
+                limited_v = min(max_velocity, abs(max_angular_velocity/k))
             if v < limited_v:
                 v += max_acceleration*dt
                 a = max_acceleration

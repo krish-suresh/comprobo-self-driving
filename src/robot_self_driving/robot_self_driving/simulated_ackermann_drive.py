@@ -24,10 +24,11 @@ class SimulatedAckermannDrive:
         plt.ion()
         plot_w = 3
         self.fig = plt.figure()
+        self.fig.set_size_inches(10, 8, forward=True)
         self.ax = self.fig.add_subplot(111)
+        self.ax.set_xlim([-0.5, 10])
+        self.ax.set_ylim([-10, 10])
         self.ax.axis("equal")
-        self.ax.set_xlim([-plot_w, plot_w])
-        self.ax.set_ylim([-plot_w, plot_w])
         self.wheel_base_line = self.ax.add_line(Line2D([], []))
         self.back_track_width_line = self.ax.add_line(Line2D([], []))
         self.front_track_width_line = self.ax.add_line(Line2D([], []))
