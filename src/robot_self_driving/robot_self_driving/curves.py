@@ -253,7 +253,7 @@ class RaceTrack:
     size_scale : int
         integer for scaling down the race track.
     waypoint_scale : int
-        integer for scaling down the amoun of x,y coordinates
+        integer for scaling down the amount of x,y coordinates
 
     """
 
