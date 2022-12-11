@@ -55,6 +55,7 @@ class RotationLimitedMotionProfile(MotionProfile):
         v = 0
         a = 0
         while s <= path.s[-1]:
+            print(v)
             self.motion_profile.append([s,v,a])
             k = path.calc_curvature(s)
             limited_v = max_velocity

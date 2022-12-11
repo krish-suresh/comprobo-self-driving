@@ -129,15 +129,24 @@ R[1][1] = 0.005
 
 x = np.array([0, 0, -np.pi/2, 0, 0.5])  # x, y, theta, steer_angle, forward_speed
 u = [0, 0]  # steer_angle_speed, forward_accel
-
-# sp = CubicSpline2D(xp, yp)
-track = RaceTrack("./tracks/IMS_raceline.csv", 12.5, 7)
-sp = track.create_spline()
-xp = track.x
-yp = track.y
+xp = [0,1, 2]
+yp = [0,0, 2]
+sp = CubicSpline2D(xp, yp)
+# track = RaceTrack("./tracks/IMS_raceline.csv", 12.5, 7)
+# sp = track.create_spline()
+# xp = track.x
+# yp = track.y
 # mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
-mp = RotationLimitedMotionProfile(sp,2,5,3,0.01)
+mp = RotationLimitedMotionProfile(sp,2,5,1,0.001)
 trajectory = CubicSplineTrajectory(sp, mp)
+dt = 0.01
+t = np.arange(0,mp.t_end,dt)
+v=[]
+for t_i in t:
+    v.append(mp.state(t_i)[1])
+plt.plot(t,v)
+plt.show()
+quit()
 plt.ion()
 fig = plt.figure()
 fig.set_size_inches(10, 8, forward=True)
@@ -145,8 +154,6 @@ ax = fig.add_subplot(111)
 ax.axis("equal")
 ax.set_xlim([-0.5, 5])
 ax.set_ylim([-5, 5])
-dt = 0.01
-t = np.arange(0,mp.t_end,dt)
 xs = []
 ys = []
 xf = []

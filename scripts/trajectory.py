@@ -76,7 +76,7 @@ class RotationLimitedMotionProfile(MotionProfile):
 
     def state(self, t):
         if t>self.t_end:
-            return 0,0
+            return 0,0,0
         return self.motion_profile[int((t/self.t_end)*self.steps)]
 
 class CubicSplineTrajectory:
