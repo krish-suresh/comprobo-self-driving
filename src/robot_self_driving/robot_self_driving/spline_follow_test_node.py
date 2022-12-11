@@ -14,7 +14,7 @@ class SplineFollowTestNode(Node):
         timer_period = 0.05
 
         self.timer = self.create_timer(timer_period, self.run_loop)
-        self.robot = Robot(self, use_sim=True)
+        self.robot = Robot(self, use_sim=False)
         # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
         # print(os.getcwd())
         # track = RaceTrack("/home/ksuresh/comprobo_self_driving/src/robot_self_driving/tracks/IMS_raceline.csv", 12.5, 7)

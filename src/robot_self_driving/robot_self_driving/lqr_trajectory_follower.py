@@ -24,6 +24,10 @@ class AckermanLQRTrajectoryFollower:
             t = time.time() - self.following_start_time
             current_goal = self.trajectory.state(t)
             current_goal[3] = self.drive.curvature_to_steering(current_goal[3])
+            print(f"X:{np.around(self.drive.state, 2)} T:{np.around(current_goal,2)}")
+            # if np.all((self.drive.state == 0)):
+            #     self.drive.state = np.array([0, 0, 0, 0, 0.01])
+            # print(np.around(self.drive.state, 2))
             A = self.drive.get_linearized_system_matrix()
             B = self.drive.get_input_matrix()
             K = control.lqr(A, B, self.Q, self.R)[0]

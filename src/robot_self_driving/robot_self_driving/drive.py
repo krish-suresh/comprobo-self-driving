@@ -27,10 +27,10 @@ class AckermannDrive():
         self.prev_encoder_ticks = 0
         self.ESC_PIN: int = 15
         self.SERVO_PIN: int = 14
-        self.WHEEL_BASE: float = 0.2 # m
+        self.WHEEL_BASE: float = 0.29845 # m 11.75in
         self.MIN_WIDTH_ESC: int = 1000
         self.MAX_WIDTH_ESC: int = 2000
-        self.TIRE_DIAMETER: int = 0.1194      # m
+        self.TIRE_DIAMETER: int = 0.11      # m
         self.GEAR_RATIO: int = 42
         self.MAX_RAW_RPM: int = 10400
         self.RAD_TO_PWM = -1000/(np.pi/2)
@@ -123,9 +123,8 @@ class AckermannDrive():
         self.state[0] += dist_travelled * np.cos(self.curr_heading)
         self.state[1] += dist_travelled * np.sin(self.curr_heading)
         self.state[2] = self.curr_heading
-        self.state[3] = self.steering_angle
-        self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)
-        print(self.state[0:3])
+        # self.state[3] = self.steering_angle
+        # self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9 + 0.01
         self.previous_odom_time = cur_time
 
     def non_linear_dynamics(self):
@@ -141,6 +140,9 @@ class AckermannDrive():
 
     def get_linearized_system_matrix(self) -> np.ndarray:
         x = self.get_state().to_vector()
+        # if np.all((x == 0)):
+        #     x = np.array([0, 0, 0, 0, 0.2])
+        # print(np.around(x, 2))
         L: float = self.WHEEL_BASE
         return np.array([[0, 0, -np.sin(x[2])*x[4], 0, np.cos(x[2])],
                   [0, 0, np.cos(x[2])*x[4], 0, np.sin(x[2])],
