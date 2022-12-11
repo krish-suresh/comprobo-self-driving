@@ -17,14 +17,13 @@ class IMUPublisher : public rclcpp::Node
         : Node("imu_publisher"), count_(0)
         {
             imu_publisher_ = this->create_publisher<std_msgs::msg::Float64>("imu_yaw",10);
-            timer_ = this->create_wall_timer(500ms, std::bind(&IMUPublisher::run_loop, this));
-            com.ZeroYaw();
+            timer_ = this->create_wall_timer(10ms, std::bind(&IMUPublisher::run_loop, this));
         }
 
     private:
         void run_loop()
         {
-            curr_pitch = com.GetYaw();
+            curr_pitch = com.GetFusedHeading();
             RCLCPP_INFO(this->get_logger(), "Publishing: '%f'", curr_pitch);
             auto message = std_msgs::msg::Float64();
             message.data = curr_pitch;
