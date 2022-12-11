@@ -28,7 +28,9 @@ class AckermanLQRTrajectoryFollower:
             B = self.drive.get_input_matrix()
             K = control.lqr(A, B, self.Q, self.R)[0]
             x = self.drive.state
-            u = K @ (current_goal-x)
+            e = current_goal-x
+            e[2] = (e[2] + np.pi) % (2 * np.pi) - np.pi
+            u = K @ e
             self.drive.set_control_input(u)
             if t > self.trajectory.motion_profile.t_end:
                 self.is_following = False

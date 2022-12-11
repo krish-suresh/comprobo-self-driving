@@ -27,7 +27,8 @@ class SplineFollowTestNode(Node):
     def run_loop(self):
         self.robot.update()
         if self.robot.controller.is_following:
-            print(self.robot.drive.get_state())
+            pass
+            # print(self.robot.drive.get_state())
         else:
             print("Path following ended.")
         
