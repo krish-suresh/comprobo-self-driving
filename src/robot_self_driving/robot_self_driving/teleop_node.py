@@ -10,7 +10,7 @@ class ReceiveTeleopNode(Node):
         self.mvt_sub = self.create_subscription(DriveCommand, "mvt_command", self.process_mvt_command, 10)
         timer_period = 0.05
         self.timer = self.create_timer(timer_period, self.run_loop)
-        self.robot = Robot(use_sim=True)
+        self.robot = Robot(self, use_sim=False)
         # self.robot.drive.arm_esc()
         self.current_mvt_cmd : DriveCommand = None
 

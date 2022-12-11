@@ -13,7 +13,7 @@ class AckermannDrive():
     def __init__(self, ros_node: Node):
         """
         """
-        # self.connect = pigpio.pi()
+        self.connect = pigpio.pi()
         self.ros_node = ros_node
         self.imu_sub = self.ros_node.create_subscription(Float64, "/imu_yaw", self.process_imu, 10)
         self.curr_heading = 0
@@ -49,20 +49,20 @@ class AckermannDrive():
         """
         """
         self.steering_angle = phi
-        steering_pwm_signal = phi*self.RAD_TO_PWM + self.CENTER_SERVO_PWM
-        print(f"Steering Angle: ", phi)
-        print(f"steering {steering_pwm_signal}")
+        steering_pwm_signal = phi*self.RAD_TO_PWM + self.CENTER_PWM
+        # print(f"Steering Angle: ", phi)
+        # print(f"steering {steering_pwm_signal}")
         self.servo_pwm(width=steering_pwm_signal)
 
     def set_drive_velocity(self, vel: float):
         """
         """
         input_vel: float = vel / self.MAX_VEL
-        print(f"Drive Velocity: ", input_vel)
-        print(self.MAX_VEL)
+        # print(f"Drive Velocity: ", input_vel)
+        # print(self.MAX_VEL)
         esc_pwm_signal = -input_vel*(self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2 + self.MIN_WIDTH_ESC + (self.MAX_WIDTH_ESC-self.MIN_WIDTH_ESC)/2
-        print(f"esc {esc_pwm_signal}")
-        # self.esc_pwm(width=esc_pwm_signal)
+        # print(f"esc {esc_pwm_signal}")
+        self.esc_pwm(width=esc_pwm_signal)
 
     def esc_pwm(self, width: int, snooze: int = 0):
         """
@@ -119,6 +119,7 @@ class AckermannDrive():
         self.state[2] = self.curr_heading
         self.state[3] = self.steering_angle
         self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)
+        print(self.state[0:3])
         self.previous_odom_time = cur_time
 
     def non_linear_dynamics(self):

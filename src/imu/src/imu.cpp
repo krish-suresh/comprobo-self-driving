@@ -34,7 +34,7 @@ class IMUPublisher : public rclcpp::Node
         rclcpp::TimerBase::SharedPtr timer_;
         size_t count_;
 
-        char IMU_PORT[13] = "/dev/ttyACM4";
+        char IMU_PORT[13] = "/dev/ttyACM0";
         AHRS com = AHRS(IMU_PORT);
 
         float curr_pitch;

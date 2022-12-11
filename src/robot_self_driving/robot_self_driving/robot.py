@@ -14,7 +14,7 @@ class Robot():
         """
         """
         self.ros_node = ros_node
-        self.camera_sub = self.ros_node.create_subscription(Image, ROS_CAMERA_TOPIC, self.process_image)
+        # self.camera_sub = self.ros_node.create_subscription(Image, ROS_CAMERA_TOPIC, self.process_image, 10)
         self.current_image = None
         self.drive = AckermannDrive(self.ros_node) if not use_sim else SimulatedAckermannDrive()
         self.controller = MPCController(self.drive, 0.2) # TODO move tol somewhere else
