@@ -127,22 +127,24 @@ R = np.eye(2)
 R[0][0] = 2
 R[1][1] = 0.005
 
-x = np.array([0, 0, -np.pi/2, 0, 0.5])  # x, y, theta, steer_angle, forward_speed
+x = np.array([0, 0, 0, 0, 0.5])  # x, y, theta, steer_angle, forward_speed
 u = [0, 0]  # steer_angle_speed, forward_accel
-xp = [0,1, 2]
-yp = [0,0, 2]
+xp = [0,1,2,2]
+yp = [0,0,2,3]
 sp = CubicSpline2D(xp, yp)
 # track = RaceTrack("./tracks/IMS_raceline.csv", 12.5, 7)
 # sp = track.create_spline()
 # xp = track.x
 # yp = track.y
 # mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
-mp = RotationLimitedMotionProfile(sp,2,5,1,0.001)
+mp = RotationLimitedMotionProfile(sp,1,0.5,0.3,0.001)
 trajectory = CubicSplineTrajectory(sp, mp)
 dt = 0.01
 t = np.arange(0,mp.t_end,dt)
 v=[]
+s=[]
 for t_i in t:
+    s.append(mp.state(t_i)[0])
     v.append(mp.state(t_i)[1])
 plt.plot(t,v)
 plt.show()
@@ -161,7 +163,7 @@ yf = []
 path_line, = ax.plot(xs,ys)
 follow_line, = ax.plot(0,0)
 target_point, = ax.plot(0, 0, "xb")
-ax.plot(xp, yp, "r")
+ax.plot(xp, yp, "xr")
 
 wheel_base = ax.add_line(Line2D([], []))
 back_track_width = ax.add_line(Line2D([], []))
@@ -175,7 +177,7 @@ wheels = [ax.add_patch(copy.copy(wheel_rect)),
 
 
 for t_i in t[:-1]:
-    print(t_i)
+    # print(t_i)
     target = trajectory.state(t_i)
     target[3] = curvature_to_steering(target[3])
     xi, yi, thetai, ki, vi = trajectory.state(t_i)

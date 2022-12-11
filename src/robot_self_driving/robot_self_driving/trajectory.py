@@ -43,24 +43,48 @@ class TrapezoidalMotionProfile(MotionProfile):
 
 
 class RotationLimitedMotionProfile(MotionProfile):
-    def __init__(self, path : CubicSpline2D, max_velocity, max_acceleration, max_angular_velocity, dt):
+    def __init__(self, path : CubicSpline2D, max_velocity, max_acceleration, max_angular_velocity, dt, tol=0.005):
         self.path : CubicSpline2D = path
         self.max_velocity = max_velocity
         self.max_acceleration = max_acceleration
         self.max_angular_velocity = max_angular_velocity
-        self.motion_profile = []
-
+        motion_profile_forward = []
         s = 0
         t = 0
         v = 0
         a = 0
+        # Forward Pass
         while s <= path.s[-1]:
-            print(v)
-            self.motion_profile.append([s,v,a])
+            motion_profile_forward.append([s,v,a])
             k = path.calc_curvature(s)
             limited_v = max_velocity
             if k != 0:
                 limited_v = min(max_velocity, abs(max_angular_velocity/k))
+            if v < limited_v:
+                v += max_acceleration*dt
+                a = max_acceleration
+            else:
+                a = 0
+
+            s += v*dt
+            t += dt
+
+        s = path.s[-1]-0.00000001
+        t = 0
+        v = 0
+        a = 0
+        self.motion_profile = []
+        i = -1
+
+        # Backward Pass
+        while s > tol:
+            self.motion_profile.append([s,v,a])
+            k = path.calc_curvature(s)
+            while motion_profile_forward[i][0] >= s:
+                i -= 1
+            limited_v = motion_profile_forward[i][1]
+            if k != 0:
+                limited_v = min(limited_v, abs(max_angular_velocity/k))
             if v < limited_v:
                 v += max_acceleration*dt
                 a = max_acceleration
@@ -70,9 +94,11 @@ class RotationLimitedMotionProfile(MotionProfile):
             else:
                 a = 0
 
-            s += v*dt
+            s -= v*dt
             t += dt
+
         self.t_end = t
+        self.motion_profile = self.motion_profile[::-1]
         self.steps = len(self.motion_profile)
 
     def state(self, t):
