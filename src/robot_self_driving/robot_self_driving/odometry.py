@@ -1,21 +1,28 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int64
-import Encoder
+import serial
 
 class EncoderNode(Node):
     def __init__(self):
         super().__init__('encoder_note')
-        self.ENCODER_PIN_ONE = 23
-        self.ENCODER_PIN_TWO = 24
-        self.encoder = Encoder.Encoder(self.ENCODER_PIN_ONE, self.ENCODER_PIN_TWO)
-        self.timer_period = 0.01
+        self.ENCODER_PORT = '/dev/ttyACM1'
+        self.ENCODER_BAUD_RATE = 9600
+        self.ENCODER_TIMEOUT = 1
+        self.encoder_serial = serial.Serial(self.ENCODER_PORT, self.ENCODER_BAUD_RATE, timeout=self.ENCODER_TIMEOUT)
+        self.timer_period = 0.005
         self.timer = self.create_timer(self.timer_period, self.run_loop)
         self.encoder_pub = self.create_publisher(Int64, "/encoder", 10)
 
     def run_loop(self):
-        self.encoder_pub.publish(Int64(data=self.encoder.read()))
-        print(Int64(data=self.encoder.read()))
+        serial_input = self.encoder_serial.readline()
+        try:
+            serial_input_int = int(serial_input.decode().strip())
+            print(f'serial: {serial_input_int}')
+            self.curr_encoder_ticks = serial_input_int
+        except (UnicodeDecodeError, ValueError):
+            return
+        self.encoder_pub.publish(Int64(data=self.curr_encoder_ticks))
 
 def main(args=None):
     rclpy.init(args=args)
