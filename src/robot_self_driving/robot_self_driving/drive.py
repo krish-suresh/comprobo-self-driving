@@ -43,6 +43,7 @@ class AckermannDrive():
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
         self.previous_set_input_time = None
+        self.curr_heading = 0
 
     def process_imu(self, msg: Float64):
         yaw = -msg.data
