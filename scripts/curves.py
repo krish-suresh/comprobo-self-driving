@@ -7,6 +7,7 @@ Adapted from Atsushi Sakai(@Atsushi_twi)
 import math
 import numpy as np
 import bisect
+import csv
 
 class CubicSpline1D:
     """
@@ -240,3 +241,56 @@ class CubicSpline2D:
         dy = self.sy.calc_first_derivative(s)
         yaw = math.atan2(dy, dx)
         return yaw
+
+class RaceTrack:
+    """
+    Race Track class
+
+    Parameters
+    ----------
+    csv_filename : string
+        csv file containing x and y coordinates for the optimal racing path.
+    size_scale : int
+        integer for scaling down the race track.
+    waypoint_scale : int
+        integer for scaling down the amoun of x,y coordinates
+
+    """
+
+    def __init__(self, csv_filename: str, size_scale: int, waypoint_scale: int):
+        
+        self.csv_filename = csv_filename
+        self.size_scale = size_scale
+        self.waypoint_scale = waypoint_scale
+        self.x = self.y = []
+
+    def create_spline(self):
+        """
+        create spline for race track
+
+        Returns
+        -------
+        spline : CubicSpline2D object
+            spline for a given race track.
+        """
+        file = csv.DictReader(open(self.csv_filename, 'r'))
+
+        x = []
+        y = []
+
+        for col in file:
+            x.append(float(col[' x_m']))
+            y.append(float(col[' y_m']))
+        
+        ax = x[::self.waypoint_scale]
+        ay = y[::self.waypoint_scale]
+
+        for idx in range(len(ax)):
+            ax[idx] = ax[idx] / self.size_scale
+            ay[idx] = ay[idx] / self.size_scale
+        
+        spline = CubicSpline2D(ax, ay)
+        self.x = ax
+        self.y = ay
+
+        return spline

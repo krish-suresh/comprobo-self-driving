@@ -3,7 +3,7 @@ import control
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from curves import CubicSpline2D
+from curves import CubicSpline2D, RaceTrack
 from trajectory import TrapezoidalMotionProfile, CubicSplineTrajectory, RotationLimitedMotionProfile
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrow, Rectangle
@@ -127,21 +127,24 @@ R = np.eye(2)
 R[0][0] = 2
 R[1][1] = 0.005
 
-x = np.array([0, 0, 0, 0, 0.5])  # x, y, theta, steer_angle, forward_speed
+x = np.array([0, 0, -np.pi/2, 0, 0.5])  # x, y, theta, steer_angle, forward_speed
 u = [0, 0]  # steer_angle_speed, forward_accel
+
+# sp = CubicSpline2D(xp, yp)
+track = RaceTrack("./tracks/IMS_raceline.csv", 12.5, 7)
+sp = track.create_spline()
+xp = track.x
+yp = track.y
+# mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
+mp = RotationLimitedMotionProfile(sp,2,5,3,0.01)
+trajectory = CubicSplineTrajectory(sp, mp)
 plt.ion()
 fig = plt.figure()
 fig.set_size_inches(10, 8, forward=True)
 ax = fig.add_subplot(111)
 ax.axis("equal")
-ax.set_xlim([-0.5, 2])
-ax.set_ylim([-0.5, 1.8])
-xp = [0, 0.5, 1, 0]
-yp = [0, 0, 1, 1.5]
-sp = CubicSpline2D(xp, yp)
-# mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
-mp = RotationLimitedMotionProfile(sp,1,2,1,0.01)
-trajectory = CubicSplineTrajectory(sp, mp)
+ax.set_xlim([-0.5, 5])
+ax.set_ylim([-5, 5])
 dt = 0.01
 t = np.arange(0,mp.t_end,dt)
 xs = []
@@ -150,8 +153,8 @@ xf = []
 yf = []
 path_line, = ax.plot(xs,ys)
 follow_line, = ax.plot(0,0)
-target_point, = ax.plot(xp[0], yp[0], "xb")
-ax.plot(xp, yp, "xr")
+target_point, = ax.plot(0, 0, "xb")
+ax.plot(xp, yp, "r")
 
 wheel_base = ax.add_line(Line2D([], []))
 back_track_width = ax.add_line(Line2D([], []))
@@ -165,6 +168,7 @@ wheels = [ax.add_patch(copy.copy(wheel_rect)),
 
 
 for t_i in t[:-1]:
+    print(t_i)
     target = trajectory.state(t_i)
     target[3] = curvature_to_steering(target[3])
     xi, yi, thetai, ki, vi = trajectory.state(t_i)

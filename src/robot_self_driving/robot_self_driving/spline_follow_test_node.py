@@ -3,9 +3,10 @@ from rclpy.node import Node
 from drive_commands.msg import DriveCommand
 from .robot import Robot
 from .geometry import AckermannState
-from .curves import CubicSpline2D
-from .trajectory import CubicSplineTrajectory, TrapezoidalMotionProfile
+from .curves import CubicSpline2D, RaceTrack
+from .trajectory import CubicSplineTrajectory, TrapezoidalMotionProfile, RotationLimitedMotionProfile
 import numpy as np
+import os
 
 class SplineFollowTestNode(Node):
     def __init__(self):
@@ -15,10 +16,11 @@ class SplineFollowTestNode(Node):
         self.timer = self.create_timer(timer_period, self.run_loop)
         self.robot = Robot(self, use_sim=True)
         # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
-        xp = [0, 0.5, 1, 0]
-        yp = [0, 0, 1, 1.5]
-        sp = CubicSpline2D(xp, yp)
-        mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
+        print(os.getcwd())
+        track = RaceTrack("/home/ksuresh/comprobo_self_driving/src/robot_self_driving/tracks/IMS_raceline.csv", 12.5, 7)
+        sp = track.create_spline()
+        # mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
+        mp = RotationLimitedMotionProfile(sp,2,5,3,0.01)
         trajectory = CubicSplineTrajectory(sp, mp)
         self.robot.controller.follow_trajectory(trajectory)
 
