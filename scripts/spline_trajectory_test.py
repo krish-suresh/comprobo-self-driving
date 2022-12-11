@@ -4,7 +4,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from curves import CubicSpline2D
-from trajectory import TrapezoidalMotionProfile, CubicSplineTrajectory
+from trajectory import TrapezoidalMotionProfile, CubicSplineTrajectory, RotationLimitedMotionProfile
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrow, Rectangle
 from typing import List
@@ -139,7 +139,8 @@ ax.set_ylim([-0.5, 1.8])
 xp = [0, 0.5, 1, 0]
 yp = [0, 0, 1, 1.5]
 sp = CubicSpline2D(xp, yp)
-mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
+# mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
+mp = RotationLimitedMotionProfile(sp,1,2,1,0.01)
 trajectory = CubicSplineTrajectory(sp, mp)
 dt = 0.01
 t = np.arange(0,mp.t_end,dt)

@@ -138,3 +138,9 @@ class SimulatedAckermannDrive:
         for wheel, angle, center in zip(self.wheel_rects, wheel_angles, wheel_centers):
             wheel.set_xy(center-self.wheel_dim/2)
             wheel.set_angle(np.degrees(angle))
+
+    def curvature_to_steering(self, k):
+        if k == 0:
+            return 0
+        r = 1/k
+        return np.arctan(self.WHEEL_BASE/r)

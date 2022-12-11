@@ -1,10 +1,10 @@
+import sys
 import pigpio
 import time
 import numpy as np 
 from .geometry import AckermannState
 from rclpy.node import Node
 from std_msgs.msg import Float64
-import Encoder
 
 class AckermannDrive():
     """
@@ -14,9 +14,11 @@ class AckermannDrive():
         """
         """
         self.connect = pigpio.pi()
+        import Encoder
         self.ros_node = ros_node
         self.imu_sub = self.ros_node.create_subscription(Float64, "/imu_yaw", self.process_imu, 10)
-        self.curr_heading = 0
+        self.start_heading = None
+        self.curr_heading = None
         self.ENCODER_PIN_ONE = 23
         self.ENCODER_PIN_TWO = 24
         self.TOTAL_ENCODER_TICKS = 8192
@@ -43,7 +45,10 @@ class AckermannDrive():
         self.previous_set_input_time = None
 
     def process_imu(self, msg: Float64):
-        self.curr_heading = np.deg2rad(msg.data)
+        yaw = -msg.data
+        if not self.start_heading:
+            self.start_heading = np.deg2rad(yaw)
+        self.curr_heading = np.deg2rad(yaw) - self.start_heading
 
     def set_steering_angle(self, phi: float):
         """
@@ -160,3 +165,9 @@ class AckermannDrive():
         self.set_steering_angle(self.state[3])
         self.set_drive_velocity(self.state[4])
         self.previous_set_input_time = current_time
+
+    def curvature_to_steering(self, k):
+        if k == 0:
+            return 0
+        r = 1/k
+        return np.arctan(self.WHEEL_BASE/r)
