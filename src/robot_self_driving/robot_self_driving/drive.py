@@ -4,7 +4,7 @@ import time
 import numpy as np 
 from .geometry import AckermannState
 from rclpy.node import Node
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Int64
 
 class AckermannDrive():
     """
@@ -14,17 +14,15 @@ class AckermannDrive():
         """
         """
         self.connect = pigpio.pi()
-        import Encoder
         self.ros_node = ros_node
         self.imu_sub = self.ros_node.create_subscription(Float64, "/imu_yaw", self.process_imu, 10)
         self.start_heading = None
         self.curr_heading = None
-        self.ENCODER_PIN_ONE = 23
-        self.ENCODER_PIN_TWO = 24
+        self.encoder_sub = self.ros_node.create_subscription(Int64, "/encoder", self.process_encoder, 10)
+        self.prev_encoder_ticks = 0
+        self.curr_encoder_ticks = 0
         self.TOTAL_ENCODER_TICKS = 8192
         self.WHEEL_ENCODER_RADIUS = .03 # m
-        self.encoder = Encoder.Encoder(self.ENCODER_PIN_ONE, self.ENCODER_PIN_TWO)
-        self.prev_encoder_ticks = 0
         self.ESC_PIN: int = 15
         self.SERVO_PIN: int = 14
         self.WHEEL_BASE: float = 0.29845 # m 11.75in
@@ -50,6 +48,9 @@ class AckermannDrive():
         if not self.start_heading:
             self.start_heading = np.deg2rad(yaw)
         self.curr_heading = np.deg2rad(yaw) - self.start_heading
+
+    def process_encoder(self, msg: Int64):
+        self.curr_encoder_ticks = msg.data
 
     def set_steering_angle(self, phi: float):
         """
@@ -116,9 +117,7 @@ class AckermannDrive():
             self.previous_odom_time = time.time_ns()
             return
         cur_time = time.time_ns()
-        curr_encoder_ticks = self.encoder.read()
-        delta_ticks = curr_encoder_ticks - self.prev_encoder_ticks
-        self.prev_encoder_ticks = curr_encoder_ticks
+        delta_ticks = self.curr_encoder_ticks - self.prev_encoder_ticks
         dist_travelled = delta_ticks/self.TOTAL_ENCODER_TICKS*(2*np.pi*self.WHEEL_ENCODER_RADIUS)
         self.state[0] += dist_travelled * np.cos(self.curr_heading)
         self.state[1] += dist_travelled * np.sin(self.curr_heading)
@@ -126,6 +125,7 @@ class AckermannDrive():
         # self.state[3] = self.steering_angle
         # self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9 + 0.01
         self.previous_odom_time = cur_time
+        self.prev_encoder_ticks = self.curr_encoder_ticks
 
     def non_linear_dynamics(self):
         x = self.get_state().to_vector()
