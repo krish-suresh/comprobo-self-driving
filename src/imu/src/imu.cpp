@@ -24,7 +24,7 @@ class IMUPublisher : public rclcpp::Node
         void run_loop()
         {
             curr_pitch = com.GetFusedHeading();
-            RCLCPP_INFO(this->get_logger(), "Publishing: '%f'", curr_pitch);
+            // RCLCPP_INFO(this->get_logger(), "Publishing: '%f'", curr_pitch);
             auto message = std_msgs::msg::Float64();
             message.data = curr_pitch;
             imu_publisher_->publish(message);
