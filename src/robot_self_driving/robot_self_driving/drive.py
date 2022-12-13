@@ -4,7 +4,12 @@ import time
 import numpy as np 
 from .geometry import AckermannState
 from rclpy.node import Node
-from std_msgs.msg import Float64, Int64
+from std_msgs.msg import Float64, Int64MultiArray, Header
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseWithCovariance, TwistWithCovariance, Pose, Point, Quaternion, Twist, Vector3
+from sensor_msgs.msg import Imu
+from tf_transformations import euler_from_quaternion
+from builtin_interfaces.msg import Time
 
 class AckermannDrive():
     """
@@ -15,15 +20,18 @@ class AckermannDrive():
         """
         self.connect = pigpio.pi()
         self.ros_node = ros_node
-        self.imu_sub = self.ros_node.create_subscription(Float64, "/imu_yaw", self.process_imu, 10)
+        self.imu_sub = self.ros_node.create_subscription(Imu, "/imu", self.process_imu, 10)
         self.start_heading = None
         self.curr_heading = None
-        self.encoder_sub = self.ros_node.create_subscription(Int64, "/encoder", self.process_encoder, 10)
-        self.start_encoder_ticks = None
-        self.prev_encoder_ticks = None
-        self.curr_encoder_ticks = None
-        self.TOTAL_ENCODER_TICKS = 8192
-        self.WHEEL_ENCODER_RADIUS = .03 # m
+        self.orientation: Quaternion = None
+        self.encoder_sub = self.ros_node.create_subscription(Int64MultiArray, "/encoder", self.process_encoder, 10)
+        self.start_encoder_ticks: np.ndarray = np.array([])
+        self.prev_encoder_ticks: np.ndarray = np.array([])
+        self.curr_encoder_ticks: np.ndarray = np.array([])
+        self.TOTAL_ENCODER_TICKS: int = 8192
+        self.WHEEL_ENCODER_RADIUS: float = .03 # m
+        self.curr_odom: Odometry = None
+        self.odom_pub = self.ros_node.create_publisher(Odometry, "/wheeled_odom", 10)
         self.ESC_PIN: int = 15
         self.SERVO_PIN: int = 14
         self.WHEEL_BASE: float = 0.29845 # m 11.75in
@@ -42,20 +50,21 @@ class AckermannDrive():
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
         self.previous_set_input_time = None
-        self.curr_heading = 0
         self.logger = self.ros_node.get_logger()
 
-    def process_imu(self, msg: Float64):
-        yaw = -msg.data
+    def process_imu(self, msg: Imu):
+        self.orientation = msg.orientation
+        self.angular_vel = msg.angular_velocity
+        (_, _, yaw) = -euler_from_quaternion([self.orientation.x, self.orientation.y, self.orientation.z, self.orientation.w])
         if not self.start_heading:
             self.start_heading = np.deg2rad(yaw)
         self.curr_heading = (np.deg2rad(yaw) - self.start_heading + np.pi) % (2 * np.pi) - np.pi
 
-    def process_encoder(self, msg: Int64):
-        if not self.start_encoder_ticks:
-            self.start_encoder_ticks = msg.data
-            self.prev_encoder_ticks = msg.data - self.start_encoder_ticks
-        self.curr_encoder_ticks = msg.data - self.start_encoder_ticks
+    def process_encoder(self, msg: Int64MultiArray):
+        if len(self.start_encoder_ticks) == 0:
+            self.start_encoder_ticks = np.array(msg.data)
+            self.prev_encoder_ticks = np.array(msg.data) - np.array(self.start_encoder_ticks)
+        self.curr_encoder_ticks = np.array(msg.data) - self.start_encoder_ticks
 
     def set_steering_angle(self, phi: float):
         """
@@ -128,19 +137,36 @@ class AckermannDrive():
         if not self.previous_odom_time:
             self.previous_odom_time = time.time_ns()
             return
-        if not self.curr_encoder_ticks:
+        if len(self.curr_encoder_ticks) == 0:
             return
         cur_time = time.time_ns()
         delta_ticks = self.curr_encoder_ticks - self.prev_encoder_ticks
         dist_travelled = delta_ticks/self.TOTAL_ENCODER_TICKS*(2*np.pi*self.WHEEL_ENCODER_RADIUS)
-        self.state[0] += dist_travelled * np.cos(self.curr_heading)
-        self.state[1] += dist_travelled * np.sin(self.curr_heading)
+        self.state[0] += dist_travelled[0] * np.cos(self.curr_heading) + dist_travelled[1] * np.sin(self.curr_heading)
+        self.state[1] += dist_travelled[0] * np.sin(self.curr_heading) + dist_travelled[1] * np.cos(self.curr_heading)
         self.state[2] = self.curr_heading
         self.logger.info(str(self.curr_encoder_ticks))
         # self.state[3] = self.steering_angle
         # self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9 + 0.01
         self.previous_odom_time = cur_time
         self.prev_encoder_ticks = self.curr_encoder_ticks
+        print(self.time)
+        self.curr_odom = Odometry(
+            header=Header(),
+            child_frame_id='',
+            pose=PoseWithCovariance(
+                pose=Pose(
+                    position = Point(x=self.state[0], y=self.state[1])),
+                    orientation = self.orientation
+            ),
+            twist=TwistWithCovariance(
+                twist=Twist(
+                    linear=Vector3(x=self.state[4]*np.cos(self.curr_heading), y=self.state[4]*np.sin(self.curr_heading)),
+                    angular=self.angular_vel
+                )
+            )
+        )
+        self.odom_pub.publish(self.curr_odom)
 
     def non_linear_dynamics(self):
         x = self.get_state().to_vector()
