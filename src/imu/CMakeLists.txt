@@ -19,7 +19,7 @@ endif()
 # CMAKE_PREFIX_PATH="src/navXTimeSync"
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/navXTimeSync)
 find_library(NavXTimeStamp REQUIRED)
@@ -27,7 +27,7 @@ find_library(NavXTimeStamp REQUIRED)
 add_executable(imu src/imu.cpp)
 target_link_libraries(imu NavXTimeStamp)
 
-ament_target_dependencies(imu rclcpp std_msgs)
+ament_target_dependencies(imu rclcpp sensor_msgs)
 
 install(TARGETS
   imu
