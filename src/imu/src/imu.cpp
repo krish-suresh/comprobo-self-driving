@@ -25,7 +25,7 @@ class IMUPublisher : public rclcpp::Node
         IMUPublisher()
         : Node("imu_publisher"), count_(0)
         {
-            imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu_yaw",10);
+            imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu",10);
             timer_ = this->create_wall_timer(10ms, std::bind(&IMUPublisher::run_loop, this));
         }
 
