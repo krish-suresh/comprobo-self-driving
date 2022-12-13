@@ -6,25 +6,26 @@ from .trajectory import CubicSplineTrajectory
 from .drive import AckermannDrive
 
 class AckermanLQRTrajectoryFollower:
-    def __init__(self, drive : AckermannDrive):
+    def __init__(self, drive : AckermannDrive, node):
         self.drive : AckermannDrive = drive
         self.trajectory : CubicSplineTrajectory = None
 
         self.Q = np.eye(5)
-        self.Q[0][0] = self.Q[1][1] = 100
+        self.Q[0][0] = self.Q[1][1] = 50
         self.Q[2][2] = 100
         self.R = np.eye(2)
         self.R[0][0] = 20
-        self.R[1][1] = 10
+        self.R[1][1] = 15
         self.is_following : bool = False
         self.following_start_time = None
+        self.logger = node.get_logger()
 
     def update(self):
         if self.is_following:
             t = time.time() - self.following_start_time
             current_goal = self.trajectory.state(t)
             current_goal[3] = self.drive.curvature_to_steering(current_goal[3])
-            print(f"X:{np.around(self.drive.state, 2)} T:{np.around(current_goal,2)}")
+            self.logger.info(f"X:{np.around(self.drive.state, 2)} T:{np.around(current_goal,2)}")
             # if np.all((self.drive.state == 0)):
             #     self.drive.state = np.array([0, 0, 0, 0, 0.01])
             # print(np.around(self.drive.state, 2))

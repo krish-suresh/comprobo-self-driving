@@ -11,7 +11,7 @@ def generate_launch_description():
 
     robot_node = Node(
         package="robot_self_driving",
-        executable="spline_test",
+        executable="receive_teleop",
     )
 
     imu_node = Node(

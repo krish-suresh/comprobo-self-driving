@@ -25,7 +25,6 @@ setup(
             'receive_teleop = robot_self_driving.teleop_node:main',
             'spline_test = robot_self_driving.spline_follow_test_node:main',
             'odometry = robot_self_driving.odometry:main',
-            'encoder = robot_self_driving.encoder:main',
         ],
     },
 )

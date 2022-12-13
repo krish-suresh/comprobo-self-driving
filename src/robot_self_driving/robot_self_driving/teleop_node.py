@@ -3,7 +3,7 @@ from rclpy.node import Node
 from drive_commands.msg import DriveCommand
 #from .drive import AckermannDrive
 from .robot import Robot
-
+import numpy as np
 class ReceiveTeleopNode(Node):
     def __init__(self):
         super().__init__('teleop_node')
@@ -19,6 +19,7 @@ class ReceiveTeleopNode(Node):
 
     def run_loop(self):
         self.robot.update()
+        self.get_logger().info(str(np.around(self.robot.drive.state, 2)))
         if self.current_mvt_cmd:
             self.robot.set_steering_angle(self.current_mvt_cmd.steering_angle)
             self.robot.set_drive_velocity(self.current_mvt_cmd.speed)

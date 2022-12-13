@@ -18,7 +18,7 @@ class Robot():
         # self.camera_sub = self.ros_node.create_subscription(Image, ROS_CAMERA_TOPIC, self.process_image, 10)
         self.current_image = None
         self.drive = AckermannDrive(self.ros_node) if not use_sim else SimulatedAckermannDrive()
-        self.controller = AckermanLQRTrajectoryFollower(self.drive)
+        self.controller = AckermanLQRTrajectoryFollower(self.drive, ros_node)
         # self.controller = MPCController(self.drive, 0.2) # TODO move tol somewhere else
 
     def process_image(self, msg: Image):

@@ -32,8 +32,8 @@ class AckermannDrive():
         self.TIRE_DIAMETER: int = 0.11      # m
         self.GEAR_RATIO: int = 42
         self.MAX_RAW_RPM: int = 10400
-        self.RAD_TO_PWM = -1000/(np.pi/2)
-        self.CENTER_PWM = 1250
+        self.RAD_TO_PWM = 900/(np.pi/2)
+        self.CENTER_PWM = 1550
         self.TURN_PHI_MAX = np.radians(32)
         self.TURN_PHI_MIN = np.radians(-47)
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
@@ -43,12 +43,13 @@ class AckermannDrive():
         self.previous_odom_time = None
         self.previous_set_input_time = None
         self.curr_heading = 0
+        self.logger = self.ros_node.get_logger()
 
     def process_imu(self, msg: Float64):
         yaw = -msg.data
         if not self.start_heading:
             self.start_heading = np.deg2rad(yaw)
-        self.curr_heading = np.deg2rad(yaw) - self.start_heading
+        self.curr_heading = (np.deg2rad(yaw) - self.start_heading + np.pi) % (2 * np.pi) - np.pi
 
     def process_encoder(self, msg: Int64):
         if not self.start_encoder_ticks:
@@ -95,7 +96,14 @@ class AckermannDrive():
         """
         """
         self.esc_pwm(width=self.MIN_WIDTH_ESC)
-        input("Connect power and press Enter to continue...")
+        self.ros_node.get_logger().info("Connect to power in the next 3 seconds...")
+        time.sleep(1)
+        self.ros_node.get_logger().info("Connect to power in 3 seconds...")
+        time.sleep(1)
+        self.ros_node.get_logger().info("Connect to power in 2 seconds...")
+        time.sleep(1)
+        self.ros_node.get_logger().info("Connect to power in 1 seconds...")
+        time.sleep(1)
         self.esc_pwm(width=self.MIN_WIDTH_ESC, snooze = 4)
 
     def calibrate_esc(self):
@@ -128,8 +136,7 @@ class AckermannDrive():
         self.state[0] += dist_travelled * np.cos(self.curr_heading)
         self.state[1] += dist_travelled * np.sin(self.curr_heading)
         self.state[2] = self.curr_heading
-        print(self.state)
-        print(self.curr_encoder_ticks)
+        self.logger.info(str(self.curr_encoder_ticks))
         # self.state[3] = self.steering_angle
         # self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9 + 0.01
         self.previous_odom_time = cur_time
