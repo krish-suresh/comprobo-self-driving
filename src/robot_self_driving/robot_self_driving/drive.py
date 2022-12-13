@@ -4,7 +4,7 @@ import time
 import numpy as np 
 from .geometry import AckermannState
 from rclpy.node import Node
-from std_msgs.msg import Float64, Int64
+from std_msgs.msg import Float64, Int64MultiArray
 
 class AckermannDrive():
     """
@@ -18,12 +18,12 @@ class AckermannDrive():
         self.imu_sub = self.ros_node.create_subscription(Float64, "/imu_yaw", self.process_imu, 10)
         self.start_heading = None
         self.curr_heading = None
-        self.encoder_sub = self.ros_node.create_subscription(Int64, "/encoder", self.process_encoder, 10)
-        self.start_encoder_ticks = None
-        self.prev_encoder_ticks = None
-        self.curr_encoder_ticks = None
-        self.TOTAL_ENCODER_TICKS = 8192
-        self.WHEEL_ENCODER_RADIUS = .03 # m
+        self.encoder_sub = self.ros_node.create_subscription(Int64MultiArray, "/encoder", self.process_encoder, 10)
+        self.start_encoder_ticks: np.ndarray = np.array([])
+        self.prev_encoder_ticks: np.ndarray = np.array([])
+        self.curr_encoder_ticks: np.ndarray = np.array([])
+        self.TOTAL_ENCODER_TICKS: int = 8192
+        self.WHEEL_ENCODER_RADIUS: float = .03 # m
         self.ESC_PIN: int = 15
         self.SERVO_PIN: int = 14
         self.WHEEL_BASE: float = 0.29845 # m 11.75in
@@ -50,11 +50,11 @@ class AckermannDrive():
             self.start_heading = np.deg2rad(yaw)
         self.curr_heading = np.deg2rad(yaw) - self.start_heading
 
-    def process_encoder(self, msg: Int64):
-        if not self.start_encoder_ticks:
-            self.start_encoder_ticks = msg.data
-            self.prev_encoder_ticks = msg.data - self.start_encoder_ticks
-        self.curr_encoder_ticks = msg.data - self.start_encoder_ticks
+    def process_encoder(self, msg: Int64MultiArray):
+        if len(self.start_encoder_ticks) == 0:
+            self.start_encoder_ticks = np.array(msg.data)
+            self.prev_encoder_ticks = np.array(msg.data) - np.array(self.start_encoder_ticks)
+        self.curr_encoder_ticks = np.array(msg.data) - self.start_encoder_ticks
 
     def set_steering_angle(self, phi: float):
         """
@@ -120,16 +120,15 @@ class AckermannDrive():
         if not self.previous_odom_time:
             self.previous_odom_time = time.time_ns()
             return
-        if not self.curr_encoder_ticks:
+        if len(self.curr_encoder_ticks) == 0:
             return
         cur_time = time.time_ns()
         delta_ticks = self.curr_encoder_ticks - self.prev_encoder_ticks
         dist_travelled = delta_ticks/self.TOTAL_ENCODER_TICKS*(2*np.pi*self.WHEEL_ENCODER_RADIUS)
-        self.state[0] += dist_travelled * np.cos(self.curr_heading)
-        self.state[1] += dist_travelled * np.sin(self.curr_heading)
+        self.state[0] += dist_travelled[0] * np.cos(self.curr_heading) + dist_travelled[1] * np.sin(self.curr_heading)
+        self.state[1] += dist_travelled[0] * np.sin(self.curr_heading) + dist_travelled[1] * np.cos(self.curr_heading)
         self.state[2] = self.curr_heading
-        print(self.state)
-        print(self.curr_encoder_ticks)
+        # print(np.around(self.state, decimals=2))
         # self.state[3] = self.steering_angle
         # self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9 + 0.01
         self.previous_odom_time = cur_time
