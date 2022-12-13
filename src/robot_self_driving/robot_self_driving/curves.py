@@ -253,7 +253,7 @@ class RaceTrack:
     size_scale : int
         integer for scaling down the race track.
     waypoint_scale : int
-        integer for scaling down the amount of x,y coordinates
+        integer for scaling down the amount of x,y coordinates.
 
     """
 
@@ -263,14 +263,22 @@ class RaceTrack:
         self.size_scale = size_scale
         self.waypoint_scale = waypoint_scale
 
-    def create_spline(self):
+    def access_coords(self):
         """
-        create spline for race track
+        access x,y coordinates from a csv file
 
+        Parameters
+        ----------
+        filename : string
+            csv file containg x and y coordinates.
+        
         Returns
         -------
-        spline : CubicSpline2D object
-            spline for a given race track.
+        ax : list
+            x coordinates.
+
+        ay : list
+            y coordinates.
         """
         file = csv.DictReader(open(self.csv_filename, 'r'))
 
@@ -287,7 +295,34 @@ class RaceTrack:
         for idx in range(len(ax)):
             ax[idx] = ax[idx] / self.size_scale
             ay[idx] = ay[idx] / self.size_scale
-        
-        spline = CubicSpline2D(ax, ay)
 
+        return ax, ay
+
+    def create_spline(self):
+        """
+        create spline for race track
+
+        Returns
+        -------
+        spline : CubicSpline2D object
+            spline for a given race track.
+        """
+        ax, ay = self.access_coords(self.csv_filename)
+        spline = CubicSpline2D(ax, ay)
         return spline
+
+    def create_centerline_path(self):
+        """
+        create centerline for race track
+
+        Returns
+        -------
+        ax : list
+            x coordinates.
+
+        ay : list
+            y coordinates.        
+        """
+        csv_centerline = self.csv_filename.replace('raceline', 'centerline')
+        ax, ay = self.access_coords(csv_centerline)
+        return ax, ay

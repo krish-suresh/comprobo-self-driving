@@ -9,6 +9,8 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrow, Rectangle
 from typing import List
 import copy
+# from .curves import RaceTrack
+
 class AckermanLQRTrajectoryFollower:
     def __init__(self, trajectory : CubicSplineTrajectory):
         self.trajectory = trajectory
@@ -148,7 +150,7 @@ for t_i in t:
     v.append(mp.state(t_i)[1])
 plt.plot(t,v)
 plt.show()
-quit()
+# quit()
 plt.ion()
 fig = plt.figure()
 fig.set_size_inches(10, 8, forward=True)
