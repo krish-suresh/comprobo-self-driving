@@ -62,7 +62,7 @@ class IMUPublisher : public rclcpp::Node
         rclcpp::TimerBase::SharedPtr timer_;
         size_t count_;
 
-        char IMU_PORT[13] = "/dev/ttyACM0";
+        char IMU_PORT[13] = "/dev/ttyACM1";
         AHRS com = AHRS(IMU_PORT);
         float G_TO_MS2_FACTOR = 9.80665;
 

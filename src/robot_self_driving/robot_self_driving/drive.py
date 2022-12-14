@@ -113,10 +113,13 @@ class AckermannDrive():
     def update(self):
         """
         update odom
+    
         """
+        if not self.odom:
+            return
         self.state[0] = self.odom.pose.pose.position.x
         self.state[1] = self.odom.pose.pose.position.y
-        self.state[2] = euler_from_quaternion(self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w)
+        self.state[2] = euler_from_quaternion([self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w])[-1] + self.start_heading
 
     def non_linear_dynamics(self):
         x = self.get_state().to_vector()
