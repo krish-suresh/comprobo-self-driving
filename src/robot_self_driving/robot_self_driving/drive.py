@@ -20,17 +20,7 @@ class AckermannDrive():
         """
         self.connect = pigpio.pi()
         self.ros_node = ros_node
-        self.imu_sub = self.ros_node.create_subscription(Imu, "/imu", self.process_imu, 10)
-        self.curr_heading = None
-        self.orientation: Quaternion = None
-        self.encoder_sub = self.ros_node.create_subscription(Int64MultiArray, "/encoder", self.process_encoder, 10)
-        self.start_encoder_ticks: np.ndarray = np.array([])
-        self.prev_encoder_ticks: np.ndarray = np.array([])
-        self.curr_encoder_ticks: np.ndarray = np.array([])
-        self.TOTAL_ENCODER_TICKS: int = 8192
-        self.WHEEL_ENCODER_RADIUS: float = .03 # m
         self.curr_odom: Odometry = None
-        self.odom_pub = self.ros_node.create_publisher(Odometry, "/wheeled_odom", 10)
         self.ESC_PIN: int = 15
         self.SERVO_PIN: int = 14
         self.WHEEL_BASE: float = 0.29845 # m 11.75in
@@ -45,26 +35,17 @@ class AckermannDrive():
         self.TURN_PHI_MIN = np.radians(-47)
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
         self.state = np.array([0, 0, np.pi/2, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
-        self.start_heading = self.state[2]
         self.steering_angle = 0
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
         self.previous_set_input_time = None
         self.logger = self.ros_node.get_logger()
+        self.start_heading = self.state[2]
+        self.odom = None
+        self.odom_sub = self.ros_node.create_subscription(Odometry, 'wheeled_odom', self.process_odom, 10)
 
-    def process_imu(self, msg: Imu):
-        self.orientation = msg.orientation
-        self.angular_vel = msg.angular_velocity
-        (_, _, yaw) = euler_from_quaternion([self.orientation.x, self.orientation.y, self.orientation.z, self.orientation.w])
-        # if not self.start_heading:
-        #     self.start_heading = yaw
-        self.curr_heading = (yaw - self.start_heading + np.pi) % (2 * np.pi) - np.pi
-
-    def process_encoder(self, msg: Int64MultiArray):
-        if len(self.start_encoder_ticks) == 0:
-            self.start_encoder_ticks = np.array(msg.data)
-            self.prev_encoder_ticks = np.array(msg.data) - np.array(self.start_encoder_ticks)
-        self.curr_encoder_ticks = np.array(msg.data) - self.start_encoder_ticks
+    def process_odom(self, msg: Odometry):
+        self.odom = msg
 
     def set_steering_angle(self, phi: float):
         """
@@ -133,41 +114,9 @@ class AckermannDrive():
         """
         update odom
         """
-        # TODO replace with encoder odom
-        if not self.previous_odom_time:
-            self.previous_odom_time = time.time_ns()
-            return
-        if len(self.curr_encoder_ticks) == 0:
-            return
-        cur_time = time.time_ns()
-        # print(f'Ticks: {self.curr_encoder_ticks}')
-        # print(f'Heading: {self.curr_heading}')
-        delta_ticks = self.curr_encoder_ticks - self.prev_encoder_ticks
-        dist_travelled = delta_ticks/self.TOTAL_ENCODER_TICKS*(2*np.pi*self.WHEEL_ENCODER_RADIUS)
-        self.state[0] += dist_travelled[0] * np.cos(self.curr_heading) + dist_travelled[1] * np.sin(self.curr_heading)
-        self.state[1] += dist_travelled[0] * np.sin(self.curr_heading) + dist_travelled[1] * np.cos(self.curr_heading)
-        self.state[2] = self.curr_heading
-        # self.logger.info(str(self.state))
-        # self.state[3] = self.steering_angle
-        # self.state[4] = dist_travelled/(cur_time - self.previous_odom_time)*10**9 + 0.01
-        self.previous_odom_time = cur_time
-        self.prev_encoder_ticks = self.curr_encoder_ticks
-        # self.curr_odom = Odometry(
-        #     header=Header(),
-        #     child_frame_id='',
-        #     pose=PoseWithCovariance(
-        #         pose=Pose(
-        #             position = Point(x=self.state[0], y=self.state[1])),
-        #             orientation = self.orientation
-        #     ),
-        #     twist=TwistWithCovariance(
-        #         twist=Twist(
-        #             linear=Vector3(x=self.state[4]*np.cos(self.curr_heading), y=self.state[4]*np.sin(self.curr_heading)),
-        #             angular=self.angular_vel
-        #         )
-        #     )
-        # )
-        # self.odom_pub.publish(self.curr_odom)
+        self.state[0] = self.odom.pose.pose.position.x
+        self.state[1] = self.odom.pose.pose.position.y
+        self.state[2] = euler_from_quaternion(self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w)
 
     def non_linear_dynamics(self):
         x = self.get_state().to_vector()
