@@ -34,7 +34,7 @@ class AckermannDrive():
         self.TURN_PHI_MAX = np.radians(32)
         self.TURN_PHI_MIN = np.radians(-47)
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO)/60) * ((self.TIRE_DIAMETER * np.pi))  # m/s
-        self.state = np.array([0, 0, np.pi/2, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
+        self.state = np.array([-0.026, -0.03, 2.44, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
         self.steering_angle = 0
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
@@ -159,7 +159,7 @@ class AckermannDrive():
         current_time = time.time_ns()
         t_delta: float = (current_time - self.previous_set_input_time)/ (10 ** 9)
         self.state[3:] += u*t_delta
-        self.state[3] = np.clip(self.state[3], np.radians(-37), np.radians(37))
+        self.state[3] = np.clip(self.state[3], np.radians(-47), np.radians(32))
         self.set_steering_angle(self.state[3])
         self.set_drive_velocity(self.state[4])
         self.previous_set_input_time = current_time
