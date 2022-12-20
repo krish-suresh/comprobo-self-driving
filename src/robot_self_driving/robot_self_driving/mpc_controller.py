@@ -13,6 +13,8 @@ class MPCController:
         self.tolerance = tolerance
 
         # TODO Should prob live in an LQRController
+
+        # LQR Config matricies
         self.Q = np.eye(5)
         self.Q[0][0] = self.Q[1][1] = 100
         self.Q[2][2] = 100
@@ -27,13 +29,13 @@ class MPCController:
     def update(self):
         # TODO add linearization delay
         if self.is_following:
-            A = self.drive.get_linearized_system_matrix()
+            A = self.drive.get_linearized_system_matrix() # linearized system dynamics
             B = self.drive.get_input_matrix()
-            K = control.lqr(A, B, self.Q, self.R)[0]
+            K = control.lqr(A, B, self.Q, self.R)[0] # Compute control matrix
             x = self.drive.state
-            u = K @ (self.current_goal - x)
+            u = K @ (self.current_goal - x) # compute control input
             self.drive.set_control_input(u)
-            if np.linalg.norm(x[0:3] - self.current_goal[0:3]) < self.tolerance:
+            if np.linalg.norm(x[0:3] - self.current_goal[0:3]) < self.tolerance: # if we are close enough to a waypoint, switch to next waypoint
                 if self.waypoints:
                     self.current_goal = self.waypoints.pop(0).to_vector()
                 else:
@@ -46,5 +48,5 @@ class MPCController:
         if len(waypoints) < 1:
             raise ValueError("Must follow atleast 1 waypoint")
         self.is_following = True
-        self.waypoints = waypoints
+        self.waypoints = waypoints # Store list of waypoints
         self.current_goal = self.waypoints.pop(0).to_vector()
