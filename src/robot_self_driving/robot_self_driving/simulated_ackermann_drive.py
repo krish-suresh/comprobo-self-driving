@@ -17,7 +17,7 @@ class SimulatedAckermannDrive:
         self.WHEEL_BASE: float = 0.2 # m
         self.TRACK_WIDTH: float = 0.15 # m
         self.wheel_dim = np.array([0.1, 0.05])
-        self.state = np.array([0, 0, 0, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
+        self.state = np.array([-0.026680595, -0.031101990000000003, 2.4497283881395173, 0, 0.01])  # x, y, theta, steer_angle, forward_speed
         self.u = np.zeros((2,1))
         self.previous_odom_time = None
         self.previous_set_input_time = None
@@ -26,8 +26,8 @@ class SimulatedAckermannDrive:
         self.fig = plt.figure()
         self.fig.set_size_inches(10, 8, forward=True)
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_xlim([-0.5, 10])
-        self.ax.set_ylim([-10, 10])
+        self.ax.set_xlim([-5, 5])
+        self.ax.set_ylim([-3, 7])
         self.ax.axis("equal")
         self.wheel_base_line = self.ax.add_line(Line2D([], []))
         self.back_track_width_line = self.ax.add_line(Line2D([], []))
@@ -39,6 +39,16 @@ class SimulatedAckermannDrive:
                 self.ax.add_patch(copy.copy(wheel_rect)),
                 self.ax.add_patch(copy.copy(wheel_rect)), ]
 
+    def draw_traj(self, sp):
+
+        x = []
+        y = []
+        s = np.linspace(0,sp.s[-1], 500)
+        for si in s[:-1]:
+            curr_x, curr_y = sp.calc_position(si)
+            x.append(curr_x)
+            y.append(curr_y)
+        self.ax.plot(x,y)
 
     def set_steering_angle(self, phi: float):
         """
@@ -108,6 +118,7 @@ class SimulatedAckermannDrive:
         current_time = time.time_ns()
         t_delta = (current_time - self.previous_set_input_time)/ (10 ** 9)
         self.state[3:] += u*t_delta
+        self.state[3] = np.clip(self.state[3], np.radians(-47), np.radians(32))
         self.set_steering_angle(self.state[3])
         self.set_drive_velocity(self.state[4])
         self.previous_set_input_time = current_time

@@ -14,10 +14,10 @@ class SplineFollowTestNode(Node):
         timer_period = 0.05
 
         self.timer = self.create_timer(timer_period, self.run_loop)
-        self.robot = Robot(self, use_sim=False)
+        self.robot = Robot(self, use_sim=True)
         # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
         # track = RaceTrack("/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Monza_raceline.csv", 35, 9)
-        track = RaceTrack("/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Budapest_raceline.csv", 20, 9)
+        track = RaceTrack("/home/ksuresh/comprobo_self_driving/src/robot_self_driving/tracks/Budapest_raceline.csv", 20, 9)
         x, y = track.access_coords()
         # sp = track.create_spline()
         # x = [0, 1]
@@ -26,10 +26,11 @@ class SplineFollowTestNode(Node):
         # y = [0, 0, 1-2**.5/2, 1+2**.5/2, 2, 2,  2,  1+2**.5/2,  1-2**.5/2,  0, 0]
         sp = CubicSpline2D(x,y)
         # mp = TrapezoidalMotionProfile(sp.s[-1],.2,1)        
+        input()
         mp = RotationLimitedMotionProfile(sp,1,0.5,0.5,0.01)
         trajectory = CubicSplineTrajectory(sp, mp)
         self.robot.controller.follow_trajectory(trajectory)
-        # self.robot.drive.draw_traj(sp)
+        self.robot.drive.draw_traj(sp)
 
     def run_loop(self):
         self.robot.update()
