@@ -15,13 +15,9 @@ class SplineFollowTestNode(Node):
         super().__init__("waypoint_test_node")
         timer_period = 0.05
         self.timer = self.create_timer(timer_period, self.run_loop)
-
-        self.robot = Robot(self, use_sim=False)
-
-        # Only arm the ESC if it has just been powered
-        # self.robot.drive.arm_esc()
-
-        # Specify a Race track to follow
+        self.robot = Robot(self, use_sim=True)
+        # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
+        # track = RaceTrack("/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Monza_raceline.csv", 35, 9)
         track = RaceTrack(
             "/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Budapest_raceline.csv",
             20,
@@ -35,6 +31,7 @@ class SplineFollowTestNode(Node):
 
         # Follow the calculated trajectory based on a LQR controller
         self.robot.controller.follow_trajectory(trajectory)
+        self.robot.drive.draw_traj(sp)
 
     def run_loop(self):
         """

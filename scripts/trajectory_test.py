@@ -1,4 +1,4 @@
-from curves import CubicSpline2D
+from curves import CubicSpline2D, RaceTrack
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -35,11 +35,12 @@ y = np.array(
 
 sp = CubicSpline2D(x, y)
 
+track = RaceTrack("Budapest_raceline.csv", 13, 9)
 x = []
 y = []
 s = np.linspace(0, sp.s[-1], 500)
 for si in s[:-1]:
-    print(si)
+
     curr_x, curr_y = sp.calc_position(si)
     x.append(curr_x)
     y.append(curr_y)

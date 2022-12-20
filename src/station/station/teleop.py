@@ -66,7 +66,7 @@ class SendDriveCommand(Node):
             self.controller.listen()
 
             controller_x = self.controller.axis_data[3]
-            drive_speed = (self.controller.axis_data[5] - self.controller.axis_data[2])/2
+            drive_speed = float((self.controller.axis_data[5] - self.controller.axis_data[2]))*1.4
             drive_angle = -np.deg2rad(controller_x*35)
             self.drive_command_pub.publish(DriveCommand(steering_angle=drive_angle, speed=drive_speed))
 
