@@ -1,55 +1,57 @@
 import rclpy
 from rclpy.node import Node
-from drive_commands.msg import DriveCommand
 from .robot import Robot
-from .geometry import AckermannState
 from .curves import CubicSpline2D, RaceTrack
 from .trajectory import (
     CubicSplineTrajectory,
-    TrapezoidalMotionProfile,
     RotationLimitedMotionProfile,
 )
-import numpy as np
-import os
-
 
 class SplineFollowTestNode(Node):
+    """
+    ROS Node to manage following a pre-determined spline
+    """
     def __init__(self):
         super().__init__("waypoint_test_node")
         timer_period = 0.05
-
         self.timer = self.create_timer(timer_period, self.run_loop)
+
         self.robot = Robot(self, use_sim=False)
-        # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
-        # track = RaceTrack("/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Monza_raceline.csv", 35, 9)
+
+        # Only arm the ESC if it has just been powered
+        # self.robot.drive.arm_esc()
+
+        # Specify a Race track to follow
         track = RaceTrack(
             "/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Budapest_raceline.csv",
             20,
             9,
         )
+        # Based on the points in the race track, construct a cubic spline trajectory to follow
         x, y = track.access_coords()
-        # sp = track.create_spline()
-        # x = [0, 1]
-        # y = [0, 0]
-        # x = [0, 1, 1+2**.5/2, 1+2**.5/2, 1, 0, -1, -1-2**.5/2, -1-2**.5/2, -1, 0]
-        # y = [0, 0, 1-2**.5/2, 1+2**.5/2, 2, 2,  2,  1+2**.5/2,  1-2**.5/2,  0, 0]
         sp = CubicSpline2D(x, y)
-        # mp = TrapezoidalMotionProfile(sp.s[-1],.2,1)
         mp = RotationLimitedMotionProfile(sp, 1, 0.5, 0.5, 0.01)
         trajectory = CubicSplineTrajectory(sp, mp)
+
+        # Follow the calculated trajectory based on a LQR controller
         self.robot.controller.follow_trajectory(trajectory)
-        # self.robot.drive.draw_traj(sp)
 
     def run_loop(self):
+        """
+        Callback for the timer to determine if the robot has finished following.
+        """
+        # Update the current state of the robot
         self.robot.update()
         if self.robot.controller.is_following:
             pass
-            # print(self.robot.drive.get_state())
         else:
             print("Path following ended.")
 
 
 def main(args=None):
+    """
+    Main function for the spline following node.
+    """
     rclpy.init(args=args)
     node = SplineFollowTestNode()
     rclpy.spin(node)

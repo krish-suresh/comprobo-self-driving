@@ -29,9 +29,6 @@ class AckermanLQRTrajectoryFollower:
             self.logger.info(
                 f"X:{np.around(self.drive.state, 2)} T:{np.around(current_goal,2)}"
             )
-            # if np.all((self.drive.state == 0)):
-            #     self.drive.state = np.array([0, 0, 0, 0, 0.01])
-            # print(np.around(self.drive.state, 2))
             A = self.drive.get_linearized_system_matrix()
             B = self.drive.get_input_matrix()
             K = control.lqr(A, B, self.Q, self.R)[0]
