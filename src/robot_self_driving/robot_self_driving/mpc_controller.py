@@ -6,9 +6,10 @@ import control
 
 # TODO don't use AckermanState and make it abstract to state type from drive system
 
+
 class MPCController:
     def __init__(self, drive, tolerance):
-        self.drive : AckermannDrive = drive
+        self.drive: AckermannDrive = drive
         self.tolerance = tolerance
 
         # TODO Should prob live in an LQRController
@@ -19,8 +20,8 @@ class MPCController:
         self.R[0][0] = 20
         self.R[1][1] = 10
 
-        self.waypoints : List[AckermannState] = []
-        self.is_following : bool = False
+        self.waypoints: List[AckermannState] = []
+        self.is_following: bool = False
         self.current_goal = None
 
     def update(self):
@@ -30,9 +31,9 @@ class MPCController:
             B = self.drive.get_input_matrix()
             K = control.lqr(A, B, self.Q, self.R)[0]
             x = self.drive.state
-            u = K @ (self.current_goal-x)
+            u = K @ (self.current_goal - x)
             self.drive.set_control_input(u)
-            if np.linalg.norm(x[0:3]-self.current_goal[0:3]) < self.tolerance:
+            if np.linalg.norm(x[0:3] - self.current_goal[0:3]) < self.tolerance:
                 if self.waypoints:
                     self.current_goal = self.waypoints.pop(0).to_vector()
                 else:
@@ -41,7 +42,7 @@ class MPCController:
             self.drive.set_control_input(np.zeros((2)))
             self.drive.set_drive_velocity(0)
 
-    def follow_waypoints(self, waypoints : List[AckermannState]):
+    def follow_waypoints(self, waypoints: List[AckermannState]):
         if len(waypoints) < 1:
             raise ValueError("Must follow atleast 1 waypoint")
         self.is_following = True

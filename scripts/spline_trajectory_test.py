@@ -4,84 +4,117 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from curves import CubicSpline2D, RaceTrack
-from trajectory import TrapezoidalMotionProfile, CubicSplineTrajectory, RotationLimitedMotionProfile
+from trajectory import (
+    TrapezoidalMotionProfile,
+    CubicSplineTrajectory,
+    RotationLimitedMotionProfile,
+)
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrow, Rectangle
 from typing import List
 import copy
+
 # from .curves import RaceTrack
 
+
 class AckermanLQRTrajectoryFollower:
-    def __init__(self, trajectory : CubicSplineTrajectory):
+    def __init__(self, trajectory: CubicSplineTrajectory):
         self.trajectory = trajectory
 
 
 def non_linear_dynamics(x, u):
     x_dot = np.zeros_like(x)
-    x_dot[0] = x[4]*np.cos(x[2])  # x_dot
-    x_dot[1] = x[4]*np.sin(x[2])  # y_dot
-    x_dot[2] = np.tan(x[3])*x[4]/L  # theta_dot
+    x_dot[0] = x[4] * np.cos(x[2])  # x_dot
+    x_dot[1] = x[4] * np.sin(x[2])  # y_dot
+    x_dot[2] = np.tan(x[3]) * x[4] / L  # theta_dot
     x_dot[3] = u[0]  # steer_angular_speed
     x_dot[4] = u[1]  # forward_accel
     return x_dot
 
 
 def linearization(x):
-    A = np.array([[0, 0, -np.sin(x[2])*x[4], 0, np.cos(x[2])],
-                  [0, 0, np.cos(x[2])*x[4], 0, np.sin(x[2])],
-                  [0, 0, 0, (1/(np.cos(x[3])**2))*x[4]/L, np.tan(x[3])/L],
-                  [0, 0, 0, 0, 0],
-                  [0, 0, 0, 0, 0]])
+    A = np.array(
+        [
+            [0, 0, -np.sin(x[2]) * x[4], 0, np.cos(x[2])],
+            [0, 0, np.cos(x[2]) * x[4], 0, np.sin(x[2])],
+            [0, 0, 0, (1 / (np.cos(x[3]) ** 2)) * x[4] / L, np.tan(x[3]) / L],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+        ]
+    )
     return A
 
 
-def update_car_drawing(x, wheel_base, back_track_width, front_track_width, wheels: List[Rectangle]):
+def update_car_drawing(
+    x, wheel_base, back_track_width, front_track_width, wheels: List[Rectangle]
+):
     back_axle_center = x[0:2]
-    front_axle_center = back_axle_center + [np.cos(x[2])*L, np.sin(x[2])*L]
+    front_axle_center = back_axle_center + [np.cos(x[2]) * L, np.sin(x[2]) * L]
 
-    wheel_centers = [[back_axle_center[0] + np.sin(-x[2])*W/2, back_axle_center[1] + np.cos(-x[2])*W/2],
-                     [back_axle_center[0] -
-                         np.sin(-x[2])*W/2, back_axle_center[1] - np.cos(-x[2])*W/2],
-                     [front_axle_center[0] +
-                         np.sin(-x[2])*W/2, front_axle_center[1] + np.cos(-x[2])*W/2],
-                     [front_axle_center[0] - np.sin(-x[2])*W/2, front_axle_center[1] - np.cos(-x[2])*W/2]]
+    wheel_centers = [
+        [
+            back_axle_center[0] + np.sin(-x[2]) * W / 2,
+            back_axle_center[1] + np.cos(-x[2]) * W / 2,
+        ],
+        [
+            back_axle_center[0] - np.sin(-x[2]) * W / 2,
+            back_axle_center[1] - np.cos(-x[2]) * W / 2,
+        ],
+        [
+            front_axle_center[0] + np.sin(-x[2]) * W / 2,
+            front_axle_center[1] + np.cos(-x[2]) * W / 2,
+        ],
+        [
+            front_axle_center[0] - np.sin(-x[2]) * W / 2,
+            front_axle_center[1] - np.cos(-x[2]) * W / 2,
+        ],
+    ]
     phi = x[3]
-    phi_l = np.arctan(2*L*np.sin(phi)/(2*L*np.cos(phi) - W*np.sin(phi)))
-    phi_r = np.arctan(2*L*np.sin(phi)/(2*L*np.cos(phi) + W*np.sin(phi)))
-    wheel_angles = [x[2], x[2], x[2]+phi_l, x[2]+phi_r]
-    wheel_base.set_data([[x[0], front_axle_center[0]],
-                        [x[1], front_axle_center[1]]])
-    back_track_width.set_data([[wheel_centers[0][0], wheel_centers[1][0]], [
-                              wheel_centers[0][1], wheel_centers[1][1]]])
-    front_track_width.set_data([[wheel_centers[2][0], wheel_centers[3][0]], [
-                               wheel_centers[2][1], wheel_centers[3][1]]])
+    phi_l = np.arctan(2 * L * np.sin(phi) / (2 * L * np.cos(phi) - W * np.sin(phi)))
+    phi_r = np.arctan(2 * L * np.sin(phi) / (2 * L * np.cos(phi) + W * np.sin(phi)))
+    wheel_angles = [x[2], x[2], x[2] + phi_l, x[2] + phi_r]
+    wheel_base.set_data([[x[0], front_axle_center[0]], [x[1], front_axle_center[1]]])
+    back_track_width.set_data(
+        [
+            [wheel_centers[0][0], wheel_centers[1][0]],
+            [wheel_centers[0][1], wheel_centers[1][1]],
+        ]
+    )
+    front_track_width.set_data(
+        [
+            [wheel_centers[2][0], wheel_centers[3][0]],
+            [wheel_centers[2][1], wheel_centers[3][1]],
+        ]
+    )
 
     for wheel, angle, center in zip(wheels, wheel_angles, wheel_centers):
-        wheel.set_xy(center-wheel_dim/2)
+        wheel.set_xy(center - wheel_dim / 2)
         wheel.set_angle(np.degrees(angle))
+
 
 def curvature_to_steering(k):
     if k == 0:
         return 0
-    r = 1/k
-    return math.atan(L/r)
+    r = 1 / k
+    return math.atan(L / r)
 
 
 def test_motion_profile():
-    mp = TrapezoidalMotionProfile(2,2,1)        
-    t = np.linspace(0,mp.t_end,200)
+    mp = TrapezoidalMotionProfile(2, 2, 1)
+    t = np.linspace(0, mp.t_end, 200)
     s = []
     v = []
     a = []
     for t_i in t:
-        si,vi,ai = mp.state(t_i)
+        si, vi, ai = mp.state(t_i)
         s.append(si)
         v.append(vi)
         a.append(ai)
-    plt.plot(t,s)
-    plt.plot(t,v)
-    plt.plot(t,a)
+    plt.plot(t, s)
+    plt.plot(t, v)
+    plt.plot(t, a)
     plt.show()
+
 
 def test_spline_trajectory():
     plt.ion()
@@ -90,14 +123,14 @@ def test_spline_trajectory():
     xp = [0, 0.5, 1]
     yp = [0, 0, 1]
     sp = CubicSpline2D(xp, yp)
-    mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
+    mp = TrapezoidalMotionProfile(sp.s[-1], 2, 1)
     trajectory = CubicSplineTrajectory(sp, mp)
     dt = 0.01
-    t = np.arange(0,mp.t_end,dt)
+    t = np.arange(0, mp.t_end, dt)
     x = []
     y = []
-    path_line, = ax.plot(x,y)
-    target_point, = ax.plot(xp[0], yp[0], "xb")
+    (path_line,) = ax.plot(x, y)
+    (target_point,) = ax.plot(xp[0], yp[0], "xb")
     ax.plot(xp, yp, "xr")
     for t_i in t[:-1]:
         xi, yi, thetai, ki, vi = trajectory.state(t_i)
@@ -111,15 +144,14 @@ def test_spline_trajectory():
         fig.canvas.flush_events()
         time.sleep(dt)
 
+
 L = 0.2
 W = 0.15
 wheel_dim = np.array([0.1, 0.05])
 t_delta = 0.005  # sec
-B = np.array([[0, 0],
-              [0, 0],
-              [0, 0],
-              [1, 0],  # steering angle
-              [0, 1]])  # forward accel
+B = np.array(
+    [[0, 0], [0, 0], [0, 0], [1, 0], [0, 1]]  # steering angle
+)  # forward accel
 Q = np.eye(5)
 Q[0][0] = Q[1][1] = 400
 Q[2][2] = 100
@@ -131,24 +163,24 @@ R[1][1] = 0.005
 
 x = np.array([0, 0, 0, 0, 0.5])  # x, y, theta, steer_angle, forward_speed
 u = [0, 0]  # steer_angle_speed, forward_accel
-xp = [0,1,2,2]
-yp = [0,0,2,3]
+xp = [0, 1, 2, 2]
+yp = [0, 0, 2, 3]
 sp = CubicSpline2D(xp, yp)
 # track = RaceTrack("./tracks/IMS_raceline.csv", 12.5, 7)
 # sp = track.create_spline()
 # xp = track.x
 # yp = track.y
-# mp = TrapezoidalMotionProfile(sp.s[-1],2,1)        
-mp = RotationLimitedMotionProfile(sp,1,0.5,0.3,0.001)
+# mp = TrapezoidalMotionProfile(sp.s[-1],2,1)
+mp = RotationLimitedMotionProfile(sp, 1, 0.5, 0.3, 0.001)
 trajectory = CubicSplineTrajectory(sp, mp)
 dt = 0.01
-t = np.arange(0,mp.t_end,dt)
-v=[]
-s=[]
+t = np.arange(0, mp.t_end, dt)
+v = []
+s = []
 for t_i in t:
     s.append(mp.state(t_i)[0])
     v.append(mp.state(t_i)[1])
-plt.plot(t,v)
+plt.plot(t, v)
 plt.show()
 # quit()
 plt.ion()
@@ -162,20 +194,23 @@ xs = []
 ys = []
 xf = []
 yf = []
-path_line, = ax.plot(xs,ys)
-follow_line, = ax.plot(0,0)
-target_point, = ax.plot(0, 0, "xb")
+(path_line,) = ax.plot(xs, ys)
+(follow_line,) = ax.plot(0, 0)
+(target_point,) = ax.plot(0, 0, "xb")
 ax.plot(xp, yp, "xr")
 
 wheel_base = ax.add_line(Line2D([], []))
 back_track_width = ax.add_line(Line2D([], []))
 front_track_width = ax.add_line(Line2D([], []))
 wheel_rect = Rectangle(
-    (0, 0), wheel_dim[0], wheel_dim[1], fc='none', ec='k', lw=1, rotation_point="center")
-wheels = [ax.add_patch(copy.copy(wheel_rect)),
-        ax.add_patch(copy.copy(wheel_rect)),
-        ax.add_patch(copy.copy(wheel_rect)),
-        ax.add_patch(copy.copy(wheel_rect)), ]
+    (0, 0), wheel_dim[0], wheel_dim[1], fc="none", ec="k", lw=1, rotation_point="center"
+)
+wheels = [
+    ax.add_patch(copy.copy(wheel_rect)),
+    ax.add_patch(copy.copy(wheel_rect)),
+    ax.add_patch(copy.copy(wheel_rect)),
+    ax.add_patch(copy.copy(wheel_rect)),
+]
 
 
 for t_i in t[:-1]:
@@ -185,11 +220,10 @@ for t_i in t[:-1]:
     xi, yi, thetai, ki, vi = trajectory.state(t_i)
     A = linearization(x)
     K = control.lqr(A, B, Q, R)[0]
-    u = K @ (target-x)
+    u = K @ (target - x)
     x_dot = non_linear_dynamics(x, u)
-    x += x_dot*t_delta
-    update_car_drawing(x, wheel_base, back_track_width,
-                    front_track_width, wheels)
+    x += x_dot * t_delta
+    update_car_drawing(x, wheel_base, back_track_width, front_track_width, wheels)
     path_line.set_xdata(xs)
     path_line.set_ydata(ys)
     follow_line.set_xdata(xf)
@@ -203,4 +237,3 @@ for t_i in t[:-1]:
     fig.canvas.draw()
     fig.canvas.flush_events()
     time.sleep(dt)
-

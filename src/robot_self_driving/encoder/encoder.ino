@@ -1,24 +1,34 @@
 #include <Encoder.h>
 
-Encoder verticalWheelEncoder(3,2); //TODO: Pins 
-Encoder horizontalWheelEncoder(18,19); //TODO: Pins
+// Instantiate Encoder objects based on connected pins
+Encoder verticalWheelEncoder(3,2);  
+Encoder horizontalWheelEncoder(18,19); 
 
+// Due to a lack of power pins on the arduino, one encoder
+// is powered by a GPIO pin set to high
 int hor_enc_power = 13;
 
+// Declare variables to store each encoder's current ticks
 long curr_vert_value = 0;
 long curr_hor_value = 0;
+
+// Set timer variables to ensure that serial isn't sent too
+// frequently
 int prev_time = millis();
 int time_threshold = 20;
 
 void setup() {
-  // put your setup code here, to run once
+  // Setup serial
   Serial.begin(9600);
+
+  // Set horizontal encoder power to HIGH
   pinMode(hor_enc_power, OUTPUT);
   digitalWrite(hor_enc_power, HIGH);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // If enough time has passed, read the current value of each encoder and send it
+  // via serial
   int curr_time = millis();
   if(Serial.availableForWrite()>60 && curr_time - prev_time >= time_threshold)
   {
