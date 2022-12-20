@@ -4,29 +4,38 @@ from drive_commands.msg import DriveCommand
 from .robot import Robot
 from .geometry import AckermannState
 from .curves import CubicSpline2D, RaceTrack
-from .trajectory import CubicSplineTrajectory, TrapezoidalMotionProfile, RotationLimitedMotionProfile
+from .trajectory import (
+    CubicSplineTrajectory,
+    TrapezoidalMotionProfile,
+    RotationLimitedMotionProfile,
+)
 import numpy as np
 import os
 
+
 class SplineFollowTestNode(Node):
     def __init__(self):
-        super().__init__('waypoint_test_node')
+        super().__init__("waypoint_test_node")
         timer_period = 0.05
 
         self.timer = self.create_timer(timer_period, self.run_loop)
         self.robot = Robot(self, use_sim=False)
         # self.robot.drive.arm_esc() # TODO figure out way to detect if already on and only arm if power is off
         # track = RaceTrack("/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Monza_raceline.csv", 35, 9)
-        track = RaceTrack("/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Budapest_raceline.csv", 20, 9)
+        track = RaceTrack(
+            "/home/ubuntu/ros_ws/src/comprobo_self_driving/src/robot_self_driving/tracks/Budapest_raceline.csv",
+            20,
+            9,
+        )
         x, y = track.access_coords()
         # sp = track.create_spline()
         # x = [0, 1]
         # y = [0, 0]
         # x = [0, 1, 1+2**.5/2, 1+2**.5/2, 1, 0, -1, -1-2**.5/2, -1-2**.5/2, -1, 0]
         # y = [0, 0, 1-2**.5/2, 1+2**.5/2, 2, 2,  2,  1+2**.5/2,  1-2**.5/2,  0, 0]
-        sp = CubicSpline2D(x,y)
-        # mp = TrapezoidalMotionProfile(sp.s[-1],.2,1)        
-        mp = RotationLimitedMotionProfile(sp,1,0.5,0.5,0.01)
+        sp = CubicSpline2D(x, y)
+        # mp = TrapezoidalMotionProfile(sp.s[-1],.2,1)
+        mp = RotationLimitedMotionProfile(sp, 1, 0.5, 0.5, 0.01)
         trajectory = CubicSplineTrajectory(sp, mp)
         self.robot.controller.follow_trajectory(trajectory)
         # self.robot.drive.draw_traj(sp)
@@ -38,7 +47,7 @@ class SplineFollowTestNode(Node):
             # print(self.robot.drive.get_state())
         else:
             print("Path following ended.")
-        
+
 
 def main(args=None):
     rclpy.init(args=args)

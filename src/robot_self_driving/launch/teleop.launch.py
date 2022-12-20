@@ -1,3 +1,8 @@
+"""
+ROS launch file for the teleop behavior running on the robot. This file runs
+the IMU node, odometry node for encoder data, and the receive_teleop node to
+receive drive commands from an external source.
+"""
 from launch import LaunchDescription
 from launch_ros.actions import Node
 

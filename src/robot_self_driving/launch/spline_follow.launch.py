@@ -1,3 +1,8 @@
+"""
+ROS launch file to run tests of spline following on the physical robot. This
+launches the encoder node, the IMU node, and the main spline following node.
+"""
+
 from launch import LaunchDescription
 from launch_ros.actions import Node
 

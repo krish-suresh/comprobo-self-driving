@@ -9,6 +9,7 @@ import numpy as np
 import bisect
 import csv
 
+
 class CubicSpline1D:
     """
     1D Cubic Spline class
@@ -46,8 +47,9 @@ class CubicSpline1D:
         # calc spline coefficient b and d
         for i in range(self.nx - 1):
             d = (self.c[i + 1] - self.c[i]) / (3.0 * h[i])
-            b = 1.0 / h[i] * (self.a[i + 1] - self.a[i]) \
-                - h[i] / 3.0 * (2.0 * self.c[i] + self.c[i + 1])
+            b = 1.0 / h[i] * (self.a[i + 1] - self.a[i]) - h[i] / 3.0 * (
+                2.0 * self.c[i] + self.c[i + 1]
+            )
             self.d.append(d)
             self.b.append(b)
 
@@ -69,8 +71,9 @@ class CubicSpline1D:
 
         i = self.__search_index(x)
         dx = x - self.x[i]
-        position = self.a[i] + self.b[i] * dx + \
-            self.c[i] * dx ** 2.0 + self.d[i] * dx ** 3.0
+        position = (
+            self.a[i] + self.b[i] * dx + self.c[i] * dx**2.0 + self.d[i] * dx**3.0
+        )
 
         return position
 
@@ -93,7 +96,7 @@ class CubicSpline1D:
 
         i = self.__search_index(x)
         dx = x - self.x[i]
-        dy = self.b[i] + 2.0 * self.c[i] * dx + 3.0 * self.d[i] * dx ** 2.0
+        dy = self.b[i] + 2.0 * self.c[i] * dx + 3.0 * self.d[i] * dx**2.0
         return dy
 
     def calc_second_derivative(self, x):
@@ -147,8 +150,9 @@ class CubicSpline1D:
         """
         B = np.zeros(self.nx)
         for i in range(self.nx - 2):
-            B[i + 1] = 3.0 * (a[i + 2] - a[i + 1]) / h[i + 1]\
-                - 3.0 * (a[i + 1] - a[i]) / h[i]
+            B[i + 1] = (
+                3.0 * (a[i + 2] - a[i + 1]) / h[i + 1] - 3.0 * (a[i + 1] - a[i]) / h[i]
+            )
         return B
 
 
@@ -219,7 +223,7 @@ class CubicSpline2D:
         ddx = self.sx.calc_second_derivative(s)
         dy = self.sy.calc_first_derivative(s)
         ddy = self.sy.calc_second_derivative(s)
-        k = (ddy * dx - ddx * dy) / ((dx ** 2 + dy ** 2)**(3 / 2))
+        k = (ddy * dx - ddx * dy) / ((dx**2 + dy**2) ** (3 / 2))
         return k
 
     def calc_yaw(self, s):
@@ -242,6 +246,7 @@ class CubicSpline2D:
         yaw = math.atan2(dy, dx)
         return yaw
 
+
 class RaceTrack:
     """
     Race Track class
@@ -258,7 +263,7 @@ class RaceTrack:
     """
 
     def __init__(self, csv_filename: str, size_scale: int, waypoint_scale: int):
-        
+
         self.csv_filename = csv_filename
         self.size_scale = size_scale
         self.waypoint_scale = waypoint_scale
@@ -271,7 +276,7 @@ class RaceTrack:
         ----------
         filename : string
             csv file containg x and y coordinates.
-        
+
         Returns
         -------
         ax : list
@@ -280,17 +285,17 @@ class RaceTrack:
         ay : list
             y coordinates.
         """
-        file = csv.DictReader(open(self.csv_filename, 'r'))
+        file = csv.DictReader(open(self.csv_filename, "r"))
 
         x = []
         y = []
 
         for col in file:
-            x.append(float(col[' x_m']))
-            y.append(float(col[' y_m']))
-        
-        ax = x[::self.waypoint_scale]
-        ay = y[::self.waypoint_scale]
+            x.append(float(col[" x_m"]))
+            y.append(float(col[" y_m"]))
+
+        ax = x[:: self.waypoint_scale]
+        ay = y[:: self.waypoint_scale]
 
         for idx in range(len(ax)):
             ax[idx] = ax[idx] / self.size_scale
@@ -321,8 +326,8 @@ class RaceTrack:
             x coordinates.
 
         ay : list
-            y coordinates.        
+            y coordinates.
         """
-        csv_centerline = self.csv_filename.replace('raceline', 'centerline')
+        csv_centerline = self.csv_filename.replace("raceline", "centerline")
         ax, ay = self.access_coords(csv_centerline)
         return ax, ay
